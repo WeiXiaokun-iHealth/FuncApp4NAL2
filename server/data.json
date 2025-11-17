@@ -5,6 +5,13 @@
   },
   "history": [
     {
+      "id": 1763350994497,
+      "function": "dllVersion",
+      "input": "{\n  \"sequence_num\": 1,\n  \"function\": \"dllVersion\",\n  \"input_parameters\": {}\n}\n",
+      "output": "{\n  \"sequence_num\": 1,\n  \"result\": 0,\n  \"function\": \"dllVersion\",\n  \"return\": 0,\n  \"output_parameters\": {\n    \"major\": 2,\n    \"minor\": 0\n  }\n}",
+      "timestamp": "2025-11-17T05:18:57.796Z"
+    },
+    {
       "id": 1763350316133,
       "function": "EarSimulatorGain_NL2",
       "input": "{\n  \"sequence_num\": 133,\n  \"function\": \"EarSimulatorGain_NL2\",\n  \"input_parameters\": {\n    \"AC\": [500, 1000, 2000, 4000, 0, 0, 0, 0, 0],\n    \"BC\": [500, 1000, 2000, 4000, 0, 0, 0, 0, 0],\n    \"speechLevel\": 65.0,\n    \"direction\": 0,\n    \"boost\": 0,\n    \"limiting\": 0,\n    \"channels\": 1,\n    \"target\": 0,\n    \"mic\": 0,\n    \"aidType\": 0,\n    \"ACother\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],\n    \"noOfAids\": 0,\n    \"tubing\": 0,\n    \"vent\": 0,\n    \"RECDmeasType\": 0\n  }\n}\n",

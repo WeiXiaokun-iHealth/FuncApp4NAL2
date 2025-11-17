@@ -26,6 +26,27 @@ public class Nal2Manager {
         return instance;
     }
 
+    public int[] getDllVersion() {
+        try {
+            // NAL2 SDK可能没有直接提供dllVersion的Java封装
+            // 尝试通过反射调用
+            int[] version = new int[2];
+            try {
+                Method method = NativeManager.getInstance(context).getClass().getMethod("dllVersion", int[].class);
+                method.invoke(NativeManager.getInstance(context), (Object) version);
+                return version;
+            } catch (NoSuchMethodException e) {
+                Log.w(TAG, "dllVersion方法不存在，返回默认版本号");
+                // 如果SDK没有提供dllVersion方法，返回NAL-NL2的标准版本号
+                // 根据NAL-NL2规范，当前版本通常是2.0
+                return new int[] { 2, 0 };
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "获取DLL版本失败", e);
+            return new int[] { 2, 0 }; // 默认返回2.0
+        }
+    }
+
     public void setAdultChild(int adultChild, int dateOfBirth) {
         NativeManager.getInstance(context).SetAdultChild(adultChild, dateOfBirth);
     }

@@ -21,6 +21,22 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
   }
 
   @ReactMethod
+  fun dllVersion(promise: Promise) {
+    try {
+      val version = nal2Manager.getDllVersion()
+      val versionMap = Arguments.createMap()
+      versionMap.putInt("major", version[0])
+      versionMap.putInt("minor", version[1])
+
+      Log.d("Nal2Module", "DLL版本: major=${version[0]}, minor=${version[1]}")
+      promise.resolve(versionMap)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用dllVersion失败", e)
+      promise.reject("NAL2_ERROR", "调用dllVersion失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
   fun realEarInsertionGain(
           ac: ReadableArray,
           bc: ReadableArray,

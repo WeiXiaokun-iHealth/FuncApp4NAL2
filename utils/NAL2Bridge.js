@@ -5,6 +5,7 @@
 
 import { DataParser } from './DataParser';
 import {
+  dllVersion,
   crossOverFrequencies,
   centerFrequencies,
   compressionThreshold,
@@ -48,6 +49,11 @@ export class NAL2Bridge {
 
       // 根据函数名调用相应的处理方法
       switch (functionName) {
+        case 'dllVersion':
+          result = await this.handleDllVersion(input_parameters);
+          outputParameters = { major: result.major, minor: result.minor };
+          break;
+
         case 'CrossOverFrequencies_NL2':
           result = await this.handleCrossOverFrequencies(input_parameters);
           outputParameters = { crossOverFreq: result };
@@ -177,6 +183,11 @@ export class NAL2Bridge {
   }
 
   // ==================== 具体函数处理方法 ====================
+
+  static async handleDllVersion(params) {
+    // dllVersion 不需要任何参数
+    return await dllVersion();
+  }
 
   static async handleCrossOverFrequencies(params) {
     DataParser.validateParameters(params, ['channels', 'AC', 'BC']);

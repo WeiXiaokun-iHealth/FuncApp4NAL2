@@ -24,6 +24,10 @@ interface Nal2Result {
 
 // ==================== NAL2 函数导出 ====================
 
+export function dllVersion(): Promise<{ major: number; minor: number }> {
+  return Nal2.dllVersion();
+}
+
 export function crossOverFrequencies(
   channels: number,
   ac: number[],
