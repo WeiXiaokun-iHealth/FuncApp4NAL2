@@ -40,7 +40,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
   fun realEarInsertionGain(
           ac: ReadableArray,
           bc: ReadableArray,
-          L: Int,
+          L: Double,
           limiting: Int,
           channels: Int,
           direction: Int,
@@ -470,6 +470,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
   fun realEarAidedGain(
           ac: ReadableArray,
           bc: ReadableArray,
+          L: Double,
           limiting: Int,
           channels: Int,
           direction: Int,
@@ -488,7 +489,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
                       data,
                       acDouble,
                       bcDouble,
-                      65,
+                      L,
                       limiting,
                       channels,
                       direction,
@@ -509,7 +510,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
   fun tccCouplerGain(
           ac: ReadableArray,
           bc: ReadableArray,
-          speechLevel: Double,
+          L: Double,
           limiting: Int,
           channels: Int,
           direction: Int,
@@ -525,6 +526,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
   ) {
     try {
       val gain = DoubleArray(19)
+      val lineType = IntArray(19)
       val acDouble = DoubleArray(ac.size()) { ac.getDouble(it) }
       val bcDouble = DoubleArray(bc.size()) { bc.getDouble(it) }
       val acOtherDouble = DoubleArray(acOther.size()) { acOther.getDouble(it) }
@@ -534,7 +536,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
                       gain,
                       acDouble,
                       bcDouble,
-                      speechLevel,
+                      L,
                       limiting,
                       channels,
                       direction,
@@ -545,12 +547,21 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
                       noOfAids,
                       tubing,
                       vent,
-                      RECDmeasType
+                      RECDmeasType,
+                      lineType
               )
 
-      val resultArray = Arguments.createArray()
-      result.forEach { resultArray.pushDouble(it) }
-      promise.resolve(resultArray)
+      // 返回对象包含TccGain和lineType
+      val writableMap = Arguments.createMap()
+      val tccGainArray = Arguments.createArray()
+      result.TccGain.forEach { tccGainArray.pushDouble(it) }
+      val lineTypeArray = Arguments.createArray()
+      result.lineType.forEach { lineTypeArray.pushInt(it) }
+
+      writableMap.putArray("TccGain", tccGainArray)
+      writableMap.putArray("lineType", lineTypeArray)
+
+      promise.resolve(writableMap)
     } catch (e: Exception) {
       Log.e("Nal2Module", "调用tccCouplerGain失败", e)
       promise.reject("NAL2_ERROR", "调用tccCouplerGain失败: ${e.message}", e)
@@ -561,13 +572,12 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
   fun earSimulatorGain(
           ac: ReadableArray,
           bc: ReadableArray,
-          speechLevel: Double,
+          L: Double,
           direction: Int,
-          boost: Int,
+          mic: Int,
           limiting: Int,
           channels: Int,
           target: Int,
-          mic: Int,
           aidType: Int,
           acOther: ReadableArray,
           noOfAids: Int,
@@ -578,6 +588,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
   ) {
     try {
       val gain = DoubleArray(19)
+      val lineType = IntArray(19)
       val acDouble = DoubleArray(ac.size()) { ac.getDouble(it) }
       val bcDouble = DoubleArray(bc.size()) { bc.getDouble(it) }
       val acOtherDouble = DoubleArray(acOther.size()) { acOther.getDouble(it) }
@@ -587,24 +598,32 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
                       gain,
                       acDouble,
                       bcDouble,
-                      speechLevel,
+                      L,
                       direction,
-                      boost,
+                      mic,
                       limiting,
                       channels,
                       target,
-                      mic,
                       aidType,
                       acOtherDouble,
                       noOfAids,
                       tubing,
                       vent,
-                      RECDmeasType
+                      RECDmeasType,
+                      lineType
               )
 
-      val resultArray = Arguments.createArray()
-      result.forEach { resultArray.pushDouble(it) }
-      promise.resolve(resultArray)
+      // 返回对象包含ESG和lineType
+      val writableMap = Arguments.createMap()
+      val esgArray = Arguments.createArray()
+      result.ESG.forEach { esgArray.pushDouble(it) }
+      val lineTypeArray = Arguments.createArray()
+      result.lineType.forEach { lineTypeArray.pushInt(it) }
+
+      writableMap.putArray("ESG", esgArray)
+      writableMap.putArray("lineType", lineTypeArray)
+
+      promise.resolve(writableMap)
     } catch (e: Exception) {
       Log.e("Nal2Module", "调用earSimulatorGain失败", e)
       promise.reject("NAL2_ERROR", "调用earSimulatorGain失败: ${e.message}", e)

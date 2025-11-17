@@ -202,6 +202,7 @@ export function getMPO(
 export function realEarAidedGain(
   ac: number[],
   bc: number[],
+  L: number,
   limiting: number,
   channels: number,
   direction: number,
@@ -212,6 +213,7 @@ export function realEarAidedGain(
   return Nal2.realEarAidedGain(
     Array.from(ac),
     Array.from(bc),
+    L,
     limiting,
     channels,
     direction,
@@ -251,7 +253,7 @@ export function realEarInsertionGain(
 export function tccCouplerGain(
   ac: number[],
   bc: number[],
-  speechLevel: number,
+  L: number,
   limiting: number,
   channels: number,
   direction: number,
@@ -263,11 +265,11 @@ export function tccCouplerGain(
   tubing: number,
   vent: number,
   RECDmeasType: number
-): Promise<number[]> {
+): Promise<{ TccGain: number[]; lineType: number[] }> {
   return Nal2.tccCouplerGain(
     Array.from(ac),
     Array.from(bc),
-    speechLevel,
+    L,
     limiting,
     channels,
     direction,
@@ -285,30 +287,28 @@ export function tccCouplerGain(
 export function earSimulatorGain(
   ac: number[],
   bc: number[],
-  speechLevel: number,
+  L: number,
   direction: number,
-  boost: number,
+  mic: number,
   limiting: number,
   channels: number,
   target: number,
-  mic: number,
   aidType: number,
   acOther: number[],
   noOfAids: number,
   tubing: number,
   vent: number,
   RECDmeasType: number
-): Promise<number[]> {
+): Promise<{ ESG: number[]; lineType: number[] }> {
   return Nal2.earSimulatorGain(
     Array.from(ac),
     Array.from(bc),
-    speechLevel,
+    L,
     direction,
-    boost,
+    mic,
     limiting,
     channels,
     target,
-    mic,
     aidType,
     Array.from(acOther),
     noOfAids,

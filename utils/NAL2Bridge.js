@@ -161,12 +161,20 @@ export class NAL2Bridge {
 
         case 'TccCouplerGain_NL2':
           result = await this.handleTccCouplerGain(input_parameters);
-          outputParameters = { TccGain: result };
+          // TccCouplerGain返回对象包含TccGain和lineType
+          outputParameters = { 
+            TccGain: result.TccGain || result,
+            lineType: result.lineType || []
+          };
           break;
 
         case 'EarSimulatorGain_NL2':
           result = await this.handleEarSimulatorGain(input_parameters);
-          outputParameters = { EarSimGain: result };
+          // EarSimulatorGain返回对象包含ESG和lineType
+          outputParameters = { 
+            ESG: result.ESG || result,
+            lineType: result.lineType || []
+          };
           break;
 
         default:
@@ -359,10 +367,11 @@ export class NAL2Bridge {
   }
 
   static async handleRealEarAidedGain(params) {
-    DataParser.validateParameters(params, ['AC', 'BC', 'limiting', 'channels', 'direction', 'mic', 'ACother', 'noOfAids']);
+    DataParser.validateParameters(params, ['AC', 'BC', 'L', 'limiting', 'channels', 'direction', 'mic', 'ACother', 'noOfAids']);
     return await realEarAidedGain(
       params.AC,
       params.BC,
+      params.L,
       params.limiting,
       params.channels,
       params.direction,
@@ -392,11 +401,11 @@ export class NAL2Bridge {
   }
 
   static async handleTccCouplerGain(params) {
-    DataParser.validateParameters(params, ['AC', 'BC', 'speechLevel', 'limiting', 'channels', 'direction', 'mic', 'target', 'aidType', 'ACother', 'noOfAids', 'tubing', 'vent', 'RECDmeasType']);
-    return await tccCouplerGain(
+    DataParser.validateParameters(params, ['AC', 'BC', 'L', 'limiting', 'channels', 'direction', 'mic', 'target', 'aidType', 'ACother', 'noOfAids', 'tubing', 'vent', 'RECDmeasType']);
+    const result = await tccCouplerGain(
       params.AC,
       params.BC,
-      params.speechLevel,
+      params.L,
       params.limiting,
       params.channels,
       params.direction,
@@ -409,20 +418,21 @@ export class NAL2Bridge {
       params.vent,
       params.RECDmeasType
     );
+    // 如果result是对象且包含TccGain，直接返回；否则封装
+    return result.TccGain ? result : { TccGain: result, lineType: [] };
   }
 
   static async handleEarSimulatorGain(params) {
-    DataParser.validateParameters(params, ['AC', 'BC', 'speechLevel', 'direction', 'boost', 'limiting', 'channels', 'target', 'mic', 'aidType', 'ACother', 'noOfAids', 'tubing', 'vent', 'RECDmeasType']);
-    return await earSimulatorGain(
+    DataParser.validateParameters(params, ['AC', 'BC', 'L', 'direction', 'mic', 'limiting', 'channels', 'target', 'aidType', 'ACother', 'noOfAids', 'tubing', 'vent', 'RECDmeasType']);
+    const result = await earSimulatorGain(
       params.AC,
       params.BC,
-      params.speechLevel,
+      params.L,
       params.direction,
-      params.boost,
+      params.mic,
       params.limiting,
       params.channels,
       params.target,
-      params.mic,
       params.aidType,
       params.ACother,
       params.noOfAids,
@@ -430,5 +440,7 @@ export class NAL2Bridge {
       params.vent,
       params.RECDmeasType
     );
+    // 如果result是对象且包含ESG，直接返回；否则封装
+    return result.ESG ? result : { ESG: result, lineType: [] };
   }
 }

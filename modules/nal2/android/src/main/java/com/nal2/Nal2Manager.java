@@ -100,7 +100,7 @@ public class Nal2Manager {
         }
     }
 
-    public double[] getRealEarAidedGain(double[] data, double[] acDouble, double[] bcDouble, int level, int limiting,
+    public double[] getRealEarAidedGain(double[] data, double[] acDouble, double[] bcDouble, double level, int limiting,
             int channels, int direction, int mic, int noOfAids) {
         try {
             OutputResult result = NativeManager.getInstance(context).RealEarAidedGain_NL2(data, acDouble, bcDouble,
@@ -112,7 +112,8 @@ public class Nal2Manager {
         }
     }
 
-    public double[] getRealEarInsertionGain(double[] reig, double[] ac, double[] bc, int L, int limiting, int channels,
+    public double[] getRealEarInsertionGain(double[] reig, double[] ac, double[] bc, double L, int limiting,
+            int channels,
             int direction, int mic, double[] acOther, int noOfAids) {
         try {
             OutputResult result = NativeManager.getInstance(context).RealEarInsertionGain_NL2(reig, ac, bc, L, limiting,
@@ -209,9 +210,21 @@ public class Nal2Manager {
         }
     }
 
-    public double[] getTccCouplerGain(double[] gain, double[] ac, double[] bc, double speechLevel, int limiting,
+    // 内部类用于返回TccCouplerGain的结果
+    public static class TccCouplerGainResult {
+        public double[] TccGain;
+        public int[] lineType;
+
+        public TccCouplerGainResult(double[] tccGain, int[] lineType) {
+            this.TccGain = tccGain;
+            this.lineType = lineType;
+        }
+    }
+
+    public TccCouplerGainResult getTccCouplerGain(double[] gain, double[] ac, double[] bc, double speechLevel,
+            int limiting,
             int channels, int direction, int mic, int target, int aidType, double[] acOther, int noOfAids, int tubing,
-            int vent, int RECDmeasType) {
+            int vent, int RECDmeasType, int[] lineType) {
         try {
             // 需要添加 calcCh 参数作为最后一个参数
             int[] calcCh = new int[channels];
@@ -221,26 +234,47 @@ public class Nal2Manager {
             OutputResult result = NativeManager.getInstance(context).TccCouplerGain_NL2(gain, ac, bc, speechLevel,
                     limiting, channels, direction, mic, target, aidType, acOther, noOfAids, tubing, vent, RECDmeasType,
                     calcCh);
-            return getOutputData(result, gain);
+            double[] tccGain = getOutputData(result, gain);
+            // lineType通过calcCh返回，这里简单填充
+            for (int i = 0; i < lineType.length && i < calcCh.length; i++) {
+                lineType[i] = calcCh[i];
+            }
+            return new TccCouplerGainResult(tccGain, lineType);
         } catch (Exception e) {
             Log.e(TAG, "获取TCC增益失败", e);
-            return gain;
+            return new TccCouplerGainResult(gain, lineType);
         }
     }
 
-    public double[] getEarSimulatorGain(double[] gain, double[] ac, double[] bc, double speechLevel, int direction,
-            int boost, int limiting, int channels, int target, int mic, int aidType, double[] acOther, int noOfAids,
-            int tubing, int vent, int RECDmeasType) {
+    // 内部类用于返回EarSimulatorGain的结果
+    public static class EarSimulatorGainResult {
+        public double[] ESG;
+        public int[] lineType;
+
+        public EarSimulatorGainResult(double[] esg, int[] lineType) {
+            this.ESG = esg;
+            this.lineType = lineType;
+        }
+    }
+
+    public EarSimulatorGainResult getEarSimulatorGain(double[] gain, double[] ac, double[] bc, double L,
+            int direction, int mic, int limiting, int channels, int target, int aidType, double[] acOther,
+            int noOfAids, int tubing, int vent, int RECDmeasType, int[] lineType) {
         try {
             // aidType 需要转换为 int[] 数组
             int[] aidTypeArray = new int[] { aidType };
-            OutputResult result = NativeManager.getInstance(context).EarSimulatorGain_NL2(gain, ac, bc, speechLevel,
-                    direction, boost, limiting, channels, target, mic, acOther, noOfAids, tubing, vent,
+            OutputResult result = NativeManager.getInstance(context).EarSimulatorGain_NL2(gain, ac, bc, L,
+                    direction, mic, limiting, channels, target, aidType, acOther, noOfAids, tubing, vent,
                     RECDmeasType, aidTypeArray);
-            return getOutputData(result, gain);
+            double[] esg = getOutputData(result, gain);
+            // lineType通过aidTypeArray返回，这里简单填充
+            for (int i = 0; i < lineType.length && i < aidTypeArray.length; i++) {
+                lineType[i] = aidTypeArray[i];
+            }
+            return new EarSimulatorGainResult(esg, lineType);
         } catch (Exception e) {
             Log.e(TAG, "获取EarSimulator增益失败", e);
-            return gain;
+            return new EarSimulatorGainResult(gain, lineType);
         }
     }
 
