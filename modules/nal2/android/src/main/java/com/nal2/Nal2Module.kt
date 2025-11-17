@@ -51,8 +51,8 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
   ) {
 
     try {
-      // 准备输出数组
-      val reig = DoubleArray(channels)
+      // 准备输出数组 - REIG固定为19个元素（third-octaves）
+      val reig = DoubleArray(19)
 
       // 转换输入数组
       val acDouble = DoubleArray(ac.size()) { ac.getDouble(it) }
