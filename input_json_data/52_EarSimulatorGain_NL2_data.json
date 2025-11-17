@@ -1,0 +1,21 @@
+{
+  "sequence_num": 133,
+  "function": "EarSimulatorGain_NL2",
+  "input_parameters": {
+    "AC": [500, 1000, 2000, 4000, 0, 0, 0, 0, 0],
+    "BC": [500, 1000, 2000, 4000, 0, 0, 0, 0, 0],
+    "speechLevel": 65.0,
+    "direction": 0,
+    "boost": 0,
+    "limiting": 0,
+    "channels": 1,
+    "target": 0,
+    "mic": 0,
+    "aidType": 0,
+    "ACother": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    "noOfAids": 0,
+    "tubing": 0,
+    "vent": 0,
+    "RECDmeasType": 0
+  }
+}

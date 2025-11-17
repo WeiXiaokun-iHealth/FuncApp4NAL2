@@ -9,7 +9,8 @@ import {
   ActivityIndicator 
 } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
-import Nal2Module, { processData, realEarInsertionGain } from 'react-native-nal2';
+import { DataParser } from './utils/DataParser';
+import { NAL2Bridge } from './utils/NAL2Bridge';
 
 export default function App() {
   const APP_NAME = 'FuncApp4NAL2';
@@ -105,98 +106,18 @@ export default function App() {
       // 显示接收到的input
       setInputData(input);
       
-      // 解析input JSON
-      let inputData;
-      try {
-        inputData = JSON.parse(input);
-      } catch (parseError) {
-        throw new Error(`JSON解析失败: ${parseError.message}. 请检查输入格式，注意不要有多余的逗号。`);
-      }
+      console.log('[App] 收到输入数据:', input);
       
-      const { sequence_num, function: funcName, input_parameters } = inputData;
+      // 使用DataParser解析输入
+      const parsedData = DataParser.parseInput(input);
+      console.log('[App] 解析后的数据:', parsedData);
       
-      // 验证必需字段
-      if (!funcName) {
-        throw new Error('缺少function字段');
-      }
-      if (!input_parameters) {
-        throw new Error('缺少input_parameters字段');
-      }
-      
-      console.log('处理函数:', funcName);
-      console.log('输入参数:', input_parameters);
-      
-      // 初始化输出结构
-      const output = {
-        sequence_num: sequence_num,
-        result: 0,
-        function: funcName,
-        return: 0,
-        output_parameters: {}
-      };
-      
-      // 根据function名称调用对应的NAL2 API
-      if (funcName === 'RealEarInsertionGain_NL2') {
-        try {
-          console.log('准备调用RealEarInsertionGain_NL2，参数:', input_parameters);
-          
-          // 调用NAL2模块的realEarInsertionGain方法
-            const result = await realEarInsertionGain (
-            input_parameters.AC,
-            input_parameters.BC,
-            input_parameters.L,
-            input_parameters.limiting,
-            input_parameters.channels,
-            input_parameters.direction,
-            input_parameters.mic,
-            input_parameters.ACother || [],
-            input_parameters.noOfAids
-          );
-
-
-        //   const leftResult = await processData({
-        //     dateOfBirth: 19640502, // 19640502
-        //     adultChil: 0,  // 0 = adult (age >= 15 years), 1 = child (age < 15 years)
-        //     experience: 0, // 0 = experienced, 1 = new user
-        //     compSpeed: 1, // 0 = slow release, 1 = fast release, 2 = dual
-        //     tonal: 1, // 0 = non-tonal language (e.g. English, Spanish, etc), 1 = tonal language (e.g. Mandarin, Cantonese, etc)
-        //     gender: 0, // 0 = unknown gender, 1 = male, 2 = female
-        //     channels: 18,
-        //     bandWidth: 0, //0 = broadband (e.g. speech like), 1 = narrowband (e.g. tone)
-        //     selection: 1, // 0 = REIG, 1 = REAG
-        //     WBCT: 52, // Suggested value = 52
-        //     haType: 3, // 0 = CIC (completely in canal)， 1 = ITC (in the canal)， 2 = ITE (in the ear)， 3 = BTE (behind the ear)
-        //     direction: 0, // 0 = 0 degrees， 1 = 45 degrees
-        //     mic: 1, // 0 = undisturbed field， 1 = head surface
-        //     noOfAids: 2,
-        //     // ac: [35, 45, 40, 40, 65, 70, 70, 65, 55],
-        //     // bc: [35, 45, 40, 40, 65, 70, 999, 999, 999],
-        //     // calcCh: Array(19).fill(1),
-        //     // levels: Array.from([50, 65, 80])
-        // });
-          
-          // 设置返回结果
-          output.return = 0;
-          output.result = 0;
-          output.output_parameters.REIG = result.REIG || [];
-          
-          console.log('NAL2处理成功，REIG:', result.REIG);
-        } catch (error) {
-          console.error('NAL2处理失败:', error);
-          output.return = -1;
-          output.result = -1;
-          output.output_parameters.error = error.message || String(error);
-        }
-      } else {
-        // 未知函数
-        console.warn('未知函数:', funcName);
-        output.return = -1;
-        output.result = -1;
-        output.output_parameters.error = `Unknown function: ${funcName}`;
-      }
+      // 使用NAL2Bridge处理函数调用
+      const output = await NAL2Bridge.processFunction(parsedData);
+      console.log('[App] 处理结果:', output);
       
       // 格式化输出
-      const outputJson = JSON.stringify(output, null, 2);
+      const outputJson = DataParser.formatOutput(output);
       setOutputData(outputJson);
       
       // 自动发送处理结果回Web端
@@ -205,20 +126,15 @@ export default function App() {
           type: 'send_to_web',
           output: outputJson
         }));
+        console.log('[App] 已发送结果到Web端');
       }
       
     } catch (error) {
-      console.error('处理输入数据错误:', error);
-      const errorOutput = {
-        sequence_num: 0,
-        result: -1,
-        function: 'unknown',
-        return: -1,
-        output_parameters: {
-          error: error.message
-        }
-      };
-      const errorJson = JSON.stringify(errorOutput, null, 2);
+      console.error('[App] 处理输入数据错误:', error);
+      
+      // 创建错误输出
+      const errorOutput = DataParser.createErrorOutput(0, 'unknown', error.message);
+      const errorJson = DataParser.formatOutput(errorOutput);
       setOutputData(errorJson);
       
       // 发送错误结果

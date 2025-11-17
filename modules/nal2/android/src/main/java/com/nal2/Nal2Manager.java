@@ -103,6 +103,126 @@ public class Nal2Manager {
         }
     }
 
+    public double[] getRECDhIndiv(int RECDmeasType, int dateOfBirth, int aidType, int tubing, int coupler,
+            int fittingDepth) {
+        try {
+            double[] recdh = new double[9];
+            // 需要添加 coupler2 参数 (第8个参数)
+            OutputResult result = NativeManager.getInstance(context).GetRECDh_indiv_NL2(recdh, RECDmeasType,
+                    dateOfBirth, aidType, tubing, coupler, fittingDepth, coupler);
+            return getOutputData(result, recdh);
+        } catch (Exception e) {
+            Log.e(TAG, "获取RECDh_indiv失败", e);
+            return new double[9];
+        }
+    }
+
+    public double[] getRECDhIndiv9(int RECDmeasType, int dateOfBirth, int aidType, int tubing, int coupler,
+            int fittingDepth) {
+        try {
+            double[] recdh = new double[9];
+            // 需要添加 coupler2 参数 (第8个参数)
+            OutputResult result = NativeManager.getInstance(context).GetRECDh_indiv9_NL2(recdh, RECDmeasType,
+                    dateOfBirth, aidType, tubing, coupler, fittingDepth, coupler);
+            return getOutputData(result, recdh);
+        } catch (Exception e) {
+            Log.e(TAG, "获取RECDh_indiv9失败", e);
+            return new double[9];
+        }
+    }
+
+    public double[] getRECDtIndiv(int RECDmeasType, int dateOfBirth, int aidType, int tubing, int vent, int earpiece,
+            int coupler, int fittingDepth) {
+        try {
+            double[] recdt = new double[9];
+            OutputResult result = NativeManager.getInstance(context).GetRECDt_indiv_NL2(recdt, RECDmeasType,
+                    dateOfBirth, aidType, tubing, vent, earpiece, coupler, fittingDepth);
+            return getOutputData(result, recdt);
+        } catch (Exception e) {
+            Log.e(TAG, "获取RECDt_indiv失败", e);
+            return new double[9];
+        }
+    }
+
+    public double[] getRECDtIndiv9(int RECDmeasType, int dateOfBirth, int aidType, int tubing, int vent, int earpiece,
+            int coupler, int fittingDepth) {
+        try {
+            double[] recdt = new double[9];
+            OutputResult result = NativeManager.getInstance(context).GetRECDt_indiv9_NL2(recdt, RECDmeasType,
+                    dateOfBirth, aidType, tubing, vent, earpiece, coupler, fittingDepth);
+            return getOutputData(result, recdt);
+        } catch (Exception e) {
+            Log.e(TAG, "获取RECDt_indiv9失败", e);
+            return new double[9];
+        }
+    }
+
+    public void setRECDhIndiv(double[] recdh) {
+        NativeManager.getInstance(context).SetRECDh_indiv_NL2(recdh);
+    }
+
+    public void setRECDhIndiv9(double[] recdh) {
+        NativeManager.getInstance(context).SetRECDh_indiv9_NL2(recdh);
+    }
+
+    public void setRECDtIndiv(double[] recdt) {
+        NativeManager.getInstance(context).SetRECDt_indiv_NL2(recdt);
+    }
+
+    public void setRECDtIndiv9(double[] recdt) {
+        NativeManager.getInstance(context).SetRECDt_indiv9_NL2(recdt);
+    }
+
+    public double[] getCompressionRatio(double[] cr, int channels, int centerFreq, double[] ac, double[] bc,
+            int direction, int mic, int limiting, double[] acOther, int noOfAids) {
+        try {
+            // centerFreq 需要转换为 int[] 数组
+            int[] centerFreqArray = new int[] { centerFreq };
+            OutputResult result = NativeManager.getInstance(context).CompressionRatio_NL2(cr, channels, centerFreqArray,
+                    ac,
+                    bc, direction, mic, limiting, acOther, noOfAids);
+            return getOutputData(result, cr);
+        } catch (Exception e) {
+            Log.e(TAG, "获取压缩比失败", e);
+            return cr;
+        }
+    }
+
+    public double[] getTccCouplerGain(double[] gain, double[] ac, double[] bc, double speechLevel, int limiting,
+            int channels, int direction, int mic, int target, int aidType, double[] acOther, int noOfAids, int tubing,
+            int vent, int RECDmeasType) {
+        try {
+            // 需要添加 calcCh 参数作为最后一个参数
+            int[] calcCh = new int[channels];
+            for (int i = 0; i < channels; i++) {
+                calcCh[i] = 1;
+            }
+            OutputResult result = NativeManager.getInstance(context).TccCouplerGain_NL2(gain, ac, bc, speechLevel,
+                    limiting, channels, direction, mic, target, aidType, acOther, noOfAids, tubing, vent, RECDmeasType,
+                    calcCh);
+            return getOutputData(result, gain);
+        } catch (Exception e) {
+            Log.e(TAG, "获取TCC增益失败", e);
+            return gain;
+        }
+    }
+
+    public double[] getEarSimulatorGain(double[] gain, double[] ac, double[] bc, double speechLevel, int direction,
+            int boost, int limiting, int channels, int target, int mic, int aidType, double[] acOther, int noOfAids,
+            int tubing, int vent, int RECDmeasType) {
+        try {
+            // aidType 需要转换为 int[] 数组
+            int[] aidTypeArray = new int[] { aidType };
+            OutputResult result = NativeManager.getInstance(context).EarSimulatorGain_NL2(gain, ac, bc, speechLevel,
+                    direction, boost, limiting, channels, target, mic, acOther, noOfAids, tubing, vent,
+                    RECDmeasType, aidTypeArray);
+            return getOutputData(result, gain);
+        } catch (Exception e) {
+            Log.e(TAG, "获取EarSimulator增益失败", e);
+            return gain;
+        }
+    }
+
     // 通过反射获取OutputResult中的数据
     private double[] getOutputData(OutputResult result, double[] defaultValue) {
         try {

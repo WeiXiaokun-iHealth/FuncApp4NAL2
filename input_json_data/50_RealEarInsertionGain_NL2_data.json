@@ -1,0 +1,14 @@
+{
+  "sequence_num": 131,
+  "function": "RealEarInsertionGain_NL2",
+  "input_parameters": {
+    "AC": [500, 1000, 2000, 4000, 0, 0, 0, 0, 0],
+    "BC": [500, 1000, 2000, 4000, 0, 0, 0, 0, 0],
+    "limiting": 0,
+    "channels": 1,
+    "direction": 0,
+    "mic": 0,
+    "ACother": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    "noOfAids": 0
+  }
+}
