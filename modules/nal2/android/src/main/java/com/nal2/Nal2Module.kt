@@ -713,7 +713,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
                         data,
                         acDouble,
                         bcDouble,
-                        level,
+                        level.toDouble(),
                         limiting,
                         channels,
                         direction,
