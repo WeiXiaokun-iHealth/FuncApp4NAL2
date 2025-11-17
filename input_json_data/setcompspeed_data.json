@@ -1,0 +1,7 @@
+{
+  "sequence_num": 123,
+  "function": "SetCompSpeed",
+  "input_parameters": {
+    "compSpeed": 0
+  }
+}

@@ -1,0 +1,5 @@
+framework module NAL_NL2 {
+    umbrella header "NAL-NL2.h" 
+    export *
+    module * { export * }
+}

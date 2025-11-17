@@ -1,0 +1,24 @@
+{
+  "name": "react-native-nal2",
+  "version": "0.0.0",
+  "description": "nal2",
+  "main": "src/index",
+  "author": " <> ()",
+  "license": "UNLICENSED",
+  "homepage": "#readme",
+  "react-native": {
+    "android": {
+      "sourceDir": "./android",
+      "packageImportPath": "import com.nal2.Nal2Package;",
+      "packageInstance": "new Nal2Package()"
+    },
+    "ios": {
+      "sourceDir": "./ios"
+    }
+  },
+  "create-react-native-library": {
+    "type": "legacy-module",
+    "languages": "kotlin-swift",
+    "version": "0.45.5"
+  }
+}

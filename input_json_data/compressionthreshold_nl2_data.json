@@ -1,0 +1,11 @@
+{
+  "sequence_num": 123,
+  "function": "CompressionThreshold_NL2",
+  "input_parameters": {
+    "WBCT": 100,
+    "aidType": 0,
+    "direction": 0,
+    "mic": 0,
+    "calcCh": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  }
+}

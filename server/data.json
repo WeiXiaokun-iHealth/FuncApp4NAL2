@@ -1,0 +1,29 @@
+{
+  "currentParams": {
+    "input": "{\"name\":\"evesdsadas\"}",
+    "output": "{\"name\":\"evesdsadas\"}"
+  },
+  "history": [
+    {
+      "id": 1763276235979,
+      "function": "SetAdultChild",
+      "input": "{\n  \"sequence_num\": 34,\n  \"function\": \"SetAdultChild\",\n  \"input_parameters\": {\n    \"adultChild\": 0,\n    \"dateOfBirth\": 20100615\n  }\n}\n",
+      "output": "{\n  \"sequence_num\": 34,\n  \"result\": -1,\n  \"function\": \"SetAdultChild\",\n  \"return\": -1,\n  \"output_parameters\": {\n    \"error\": \"Unknown function: SetAdultChild\"\n  }\n}",
+      "timestamp": "2025-11-16T06:57:15.979Z"
+    },
+    {
+      "id": 1763274471861,
+      "function": "未知函数",
+      "input": "{\"name\":\"evesdsadas\"}",
+      "output": "{\n  \"sequence_num\": 0,\n  \"result\": -1,\n  \"function\": \"unknown\",\n  \"return\": -1,\n  \"output_parameters\": {\n    \"error\": \"缺少function字段\"\n  }\n}",
+      "timestamp": "2025-11-16T06:27:51.861Z"
+    },
+    {
+      "id": 1763100479048,
+      "function": "RealEarInsertionGain_NL2",
+      "input": "{\n  \"sequence_num\": 123,\n  \"function\": \"RealEarInsertionGain_NL2\",\n  \"input_parameters\": {\n    \"AC\": [35, 45, 40, 40, 65, 70, 70, 65, 55],\n    \"BC\": [35, 45, 40, 40, 65, 70, 999, 999, 999],\n    \"L\": 52,\n    \"limiting\": 2,\n    \"channels\": 18,\n    \"direction\": 0,\n    \"mic\": 1,\n    \"ACother\": [35, 45, 40, 40, 65, 70, 70, 65, 55],\n    \"noOfAids\": 1\n  }\n}\n",
+      "output": "{\n  \"sequence_num\": 123,\n  \"result\": 0,\n  \"function\": \"RealEarInsertionGain_NL2\",\n  \"return\": 0,\n  \"output_parameters\": {\n    \"REIG\": [\n      5.007647304598746,\n      5.007647304598748,\n      5.007647304598748,\n      5.00764730459875,\n      8.782628543120119,\n      12.817052758575704,\n      14.003896630637604,\n      16.4700814555311,\n      19.695092380391845,\n      22.854885817450874,\n      23.963659016703648,\n      25.515941495657508,\n      27.289978614461923,\n      26.198915786531963,\n      24.780534110223023,\n      21.95566377559084,\n      19.59538385301832,\n      16.556940769243802\n    ]\n  }\n}",
+      "timestamp": "2025-11-14T07:08:11.054Z"
+    }
+  ]
+}

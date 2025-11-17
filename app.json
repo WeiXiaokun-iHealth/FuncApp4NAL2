@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "NALNL2APICaller",
+    "slug": "FuncApp4NAL2",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.funcapp.nal2"
+    },
+    "android": {
+      "package": "com.funcapp.nal2"
+    }
+  }
+}

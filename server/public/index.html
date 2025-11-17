@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAL2参数管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        .main-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #666;
+            font-size: 14px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 13px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #007AFF;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #007AFF;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0051D5;
+        }
+
+        .btn-success {
+            background: #34C759;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #248A3D;
+        }
+
+        .btn-danger {
+            background: #FF3B30;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #D70015;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .history-list {
+            list-style: none;
+        }
+
+        .history-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #f8f8f8;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .history-item:hover {
+            background: #e8e8e8;
+        }
+
+        .history-item.active {
+            border-color: #007AFF;
+            background: #E3F2FD;
+        }
+
+        .history-item-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .history-item-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .history-item-actions {
+            margin-top: 8px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 4px 12px;
+            font-size: 12px;
+        }
+
+        .status-message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #D4EDDA;
+            color: #155724;
+            border: 1px solid #C3E6CB;
+        }
+
+        .status-message.error {
+            background: #F8D7DA;
+            color: #721C24;
+            border: 1px solid #F5C6CB;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="main-panel">
+            <h1>NAL2参数管理</h1>
+
+            <div class="status-message" id="statusMessage"></div>
+
+            <div class="form-group">
+                <label for="inputText">Input</label>
+                <textarea id="inputText" placeholder="输入参数（JSON格式）..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="outputText">Output</label>
+                <textarea id="outputText" placeholder="输出参数（JSON格式）..."></textarea>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="sendToApp()">发送到App处理</button>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <h2>历史记录</h2>
+            <ul class="history-list" id="historyList">
+                <li class="empty-state">暂无历史记录</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let currentHistoryId = null;
+        let ws = null;
+        let wsConnected = false;
+
+        // 初始化WebSocket连接
+        function initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket已连接');
+                wsConnected = true;
+                // 注册为Web客户端
+                ws.send(JSON.stringify({ type: 'register', client: 'web' }));
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('收到WebSocket消息:', data);
+
+                    if (data.type === 'registered') {
+                        showMessage('WebSocket已连接', 'success');
+                    } else if (data.type === 'receive_output') {
+                        // 接收到App处理的output
+                        document.getElementById('outputText').value = data.output;
+                        showMessage('已收到App处理结果！', 'success');
+
+                        // 自动保存到历史记录
+                        autoSaveToHistory();
+                    } else if (data.type === 'error') {
+                        showMessage(data.message, 'error');
+                    }
+                } catch (error) {
+                    console.error('解析WebSocket消息错误:', error);
+                }
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket已断开');
+                wsConnected = false;
+                // 3秒后重连
+                setTimeout(initWebSocket, 3000);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket错误:', error);
+            };
+        }
+
+        // 发送input给App处理（WebSocket方式）
+        function sendToApp() {
+            if (!wsConnected) {
+                showMessage('WebSocket未连接', 'error');
+                return;
+            }
+
+            const input = document.getElementById('inputText').value;
+            if (!input) {
+                showMessage('请先输入Input参数', 'error');
+                return;
+            }
+
+            ws.send(JSON.stringify({
+                type: 'send_to_app',
+                input: input
+            }));
+
+            showMessage('已发送给App处理...', 'success');
+        }
+
+        // 显示状态消息
+        function showMessage(message, type = 'success') {
+            const msgEl = document.getElementById('statusMessage');
+            msgEl.textContent = message;
+            msgEl.className = `status-message ${type}`;
+            msgEl.style.display = 'block';
+
+            setTimeout(() => {
+                msgEl.style.display = 'none';
+            }, 3000);
+        }
+
+        // 加载当前参数
+        async function loadCurrentParams() {
+            try {
+                const response = await fetch('/api/current-params');
+                const data = await response.json();
+                document.getElementById('inputText').value = data.input || '';
+                document.getElementById('outputText').value = data.output || '';
+            } catch (error) {
+                console.error('加载当前参数失败:', error);
+            }
+        }
+
+        // 接收参数（从服务器获取并显示output到outputText）
+        async function receiveParams() {
+            try {
+                const response = await fetch('/api/current-params');
+                const data = await response.json();
+
+                // 将服务器返回的output显示到outputText
+                document.getElementById('outputText').value = data.output || '';
+                showMessage('已接收参数！', 'success');
+            } catch (error) {
+                showMessage('接收参数失败: ' + error.message, 'error');
+            }
+        }
+
+        // 设置为当前参数
+        async function setCurrentParams() {
+            const input = document.getElementById('inputText').value;
+            const output = document.getElementById('outputText').value;
+
+            try {
+                const response = await fetch('/api/current-params', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input, output })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showMessage('已设置为当前参数！', 'success');
+                } else {
+                    showMessage('设置失败: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('设置失败: ' + error.message, 'error');
+            }
+        }
+
+        // 自动保存到历史（处理完成后）
+        async function autoSaveToHistory() {
+            const input = document.getElementById('inputText').value;
+            const output = document.getElementById('outputText').value;
+
+            try {
+                const response = await fetch('/api/history', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input, output })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    if (result.updated) {
+                        console.log('已更新历史记录');
+                    } else {
+                        console.log('已新增历史记录');
+                    }
+                    loadHistory();
+                } else {
+                    console.error('自动保存失败:', result.message);
+                }
+            } catch (error) {
+                console.error('自动保存失败:', error);
+            }
+        }
+
+        // 加载历史记录
+        async function loadHistory() {
+            try {
+                const response = await fetch('/api/history');
+                const history = await response.json();
+
+                const listEl = document.getElementById('historyList');
+
+                if (history.length === 0) {
+                    listEl.innerHTML = '<li class="empty-state">暂无历史记录</li>';
+                    return;
+                }
+
+                listEl.innerHTML = history.map(item => `
+                    <li class="history-item ${item.id === currentHistoryId ? 'active' : ''}" 
+                        onclick="loadHistoryItem(${item.id})">
+                        <div class="history-item-name">${escapeHtml(item.function || item.name || '未知函数')}</div>
+                        <div class="history-item-time">${new Date(item.timestamp).toLocaleString('zh-CN')}</div>
+                        <div class="history-item-actions">
+                            <button class="btn-danger btn-small" onclick="event.stopPropagation(); deleteHistory(${item.id})">删除</button>
+                        </div>
+                    </li>
+                `).join('');
+            } catch (error) {
+                console.error('加载历史记录失败:', error);
+            }
+        }
+
+        // 加载历史记录项
+        async function loadHistoryItem(id) {
+            try {
+                const response = await fetch('/api/history');
+                const history = await response.json();
+                const item = history.find(h => h.id === id);
+
+                if (item) {
+                    document.getElementById('inputText').value = item.input || '';
+                    document.getElementById('outputText').value = item.output || '';
+                    currentHistoryId = id;
+                    loadHistory(); // 刷新列表以更新active状态
+                }
+            } catch (error) {
+                console.error('加载历史记录项失败:', error);
+            }
+        }
+
+
+        // 删除历史记录
+        async function deleteHistory(id) {
+            if (!confirm('确定要删除这条历史记录吗？')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/history/${id}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showMessage('历史记录已删除！', 'success');
+                    if (currentHistoryId === id) {
+                        currentHistoryId = null;
+                        document.getElementById('inputText').value = '';
+                        document.getElementById('outputText').value = '';
+                    }
+                    loadHistory();
+                } else {
+                    showMessage('删除失败: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('删除失败: ' + error.message, 'error');
+            }
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 页面加载时初始化
+        window.onload = () => {
+            initWebSocket();
+            loadCurrentParams();
+            loadHistory();
+        };
+    </script>
+</body>
+
+</html>

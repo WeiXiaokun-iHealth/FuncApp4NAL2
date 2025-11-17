@@ -1,0 +1,9 @@
+{
+  "sequence_num": 123,
+  "function": "CrossOverFrequencies_NL2",
+  "input_parameters": {
+    "channels": 18,
+    "AC": [35, 45, 40, 40, 65, 70, 70, 65, 55],
+    "BC": [35, 45, 40, 40, 65, 70, 70, 65, 55]
+  }
+}
