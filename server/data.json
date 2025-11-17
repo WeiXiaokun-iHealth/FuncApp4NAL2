@@ -170,7 +170,7 @@
       "function": "RealEarInsertionGain_NL2",
       "input": "{\n  \"sequence_num\": 131,\n  \"function\": \"RealEarInsertionGain_NL2\",\n  \"input_parameters\": {\n    \"AC\": [500, 1000, 2000, 4000, 0, 0, 0, 0, 0],\n    \"BC\": [500, 1000, 2000, 4000, 0, 0, 0, 0, 0],\n    \"limiting\": 0,\n    \"channels\": 1,\n    \"direction\": 0,\n    \"mic\": 0,\n    \"ACother\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],\n    \"noOfAids\": 0\n  }\n}\n",
       "output": "{\n  \"sequence_num\": 131,\n  \"result\": 0,\n  \"function\": \"RealEarInsertionGain_NL2\",\n  \"return\": 0,\n  \"output_parameters\": {\n    \"REIG\": [\n      14.47963411237817\n    ]\n  }\n}",
-      "timestamp": "2025-11-17T03:30:52.172Z"
+      "timestamp": "2025-11-17T05:50:23.878Z"
     }
   ]
 }
