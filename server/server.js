@@ -208,6 +208,119 @@ app.delete('/api/history/:id', (req, res) => {
   }
 });
 
+// NAL2测试相关API
+
+// 获取所有测试文件列表
+app.get('/api/test/run-all', (req, res) => {
+  try {
+    const testDir = path.join(__dirname, '../input_json_data');
+    const files = fs.readdirSync(testDir)
+      .filter(file => file.endsWith('.json'))
+      .sort();
+    
+    const tests = files.map(file => {
+      const filePath = path.join(testDir, file);
+      const content = fs.readFileSync(filePath, 'utf8');
+      return JSON.parse(content);
+    });
+    
+    res.json(tests);
+  } catch (error) {
+    console.error('读取测试文件失败:', error);
+    res.status(500).json({ error: '读取测试文件失败: ' + error.message });
+  }
+});
+
+// 处理NAL2函数调用（通过WebSocket转发到App）
+app.post('/api/nal2/process', async (req, res) => {
+  try {
+    const input = req.body;
+    
+    // 检查App是否连接
+    if (!clients.app || clients.app.readyState !== WebSocket.OPEN) {
+      return res.status(503).json({
+        sequence_num: input.sequence_num || 0,
+        function: input.function || 'unknown',
+        return: -1,
+        output_parameters: {
+          error: 'App未连接或已断开'
+        }
+      });
+    }
+    
+    // 创建Promise等待App响应
+    const response = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('请求超时'));
+      }, 30000); // 30秒超时
+      
+      // 设置临时消息处理器
+      const messageHandler = (message) => {
+        try {
+          const data = JSON.parse(message);
+          if (data.type === 'nal2_response' && data.sequence_num === input.sequence_num) {
+            clearTimeout(timeout);
+            clients.app.removeListener('message', messageHandler);
+            resolve(data.result);
+          }
+        } catch (error) {
+          // 忽略解析错误
+        }
+      };
+      
+      clients.app.on('message', messageHandler);
+      
+      // 发送请求到App
+      clients.app.send(JSON.stringify({
+        type: 'nal2_request',
+        data: input
+      }));
+    });
+    
+    res.json(response);
+    
+  } catch (error) {
+    console.error('处理NAL2请求失败:', error);
+    res.status(500).json({
+      sequence_num: req.body.sequence_num || 0,
+      function: req.body.function || 'unknown',
+      return: -1,
+      output_parameters: {
+        error: error.message
+      }
+    });
+  }
+});
+
+// 保存测试结果
+app.post('/api/test/results', (req, res) => {
+  try {
+    const results = req.body;
+    const resultsDir = path.join(__dirname, '../tests/results');
+    
+    // 确保目录存在
+    if (!fs.existsSync(resultsDir)) {
+      fs.mkdirSync(resultsDir, { recursive: true });
+    }
+    
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `test_report_${timestamp}.json`;
+    const filepath = path.join(resultsDir, filename);
+    
+    fs.writeFileSync(filepath, JSON.stringify(results, null, 2));
+    
+    res.json({ success: true, filename });
+  } catch (error) {
+    console.error('保存测试结果失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 提供测试页面
+app.get('/test', (req, res) => {
+  res.sendFile(path.join(__dirname, 'test.html'));
+});
+
 // WebSocket连接处理
 wss.on('connection', (ws, req) => {
   console.log('新的WebSocket连接');

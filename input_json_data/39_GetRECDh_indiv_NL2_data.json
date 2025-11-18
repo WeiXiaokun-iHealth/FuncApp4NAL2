@@ -1,5 +1,5 @@
 {
-  "sequence_num": 123,
+  "sequence_num": 39,
   "function": "GetRECDh_indiv_NL2",
   "input_parameters": {
     "RECDmeasType": 0,

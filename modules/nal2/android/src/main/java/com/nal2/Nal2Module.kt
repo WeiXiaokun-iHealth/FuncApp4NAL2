@@ -630,6 +630,399 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
     }
   }
 
+  // 数据6-18的ReactMethod接口
+
+  @ReactMethod
+  fun getRealEarInputOutputCurve(
+          ac: ReadableArray,
+          bc: ReadableArray,
+          graphFreq: Int,
+          startLevel: Int,
+          finishLevel: Int,
+          limiting: Int,
+          channels: Int,
+          direction: Int,
+          mic: Int,
+          target: Int,
+          acOther: ReadableArray,
+          noOfAids: Int,
+          promise: Promise
+  ) {
+    try {
+      val acDouble = DoubleArray(ac.size()) { ac.getDouble(it) }
+      val bcDouble = DoubleArray(bc.size()) { bc.getDouble(it) }
+      val acOtherDouble = DoubleArray(acOther.size()) { acOther.getDouble(it) }
+
+      val result =
+              nal2Manager.getRealEarInputOutputCurve(
+                      acDouble,
+                      bcDouble,
+                      graphFreq,
+                      startLevel,
+                      finishLevel,
+                      limiting,
+                      channels,
+                      direction,
+                      mic,
+                      target,
+                      acOtherDouble,
+                      noOfAids
+              )
+
+      val writableMap = Arguments.createMap()
+      val reioArray = Arguments.createArray()
+      result.IO.forEach { reioArray.pushDouble(it) }
+      val reiounlArray = Arguments.createArray()
+      result.IOunl.forEach { reiounlArray.pushDouble(it) }
+
+      writableMap.putArray("REIO", reioArray)
+      writableMap.putArray("REIOunl", reiounlArray)
+
+      promise.resolve(writableMap)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getRealEarInputOutputCurve失败", e)
+      promise.reject("NAL2_ERROR", "调用getRealEarInputOutputCurve失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getTccInputOutputCurve(
+          ac: ReadableArray,
+          bc: ReadableArray,
+          graphFreq: Int,
+          startLevel: Int,
+          finishLevel: Int,
+          limiting: Int,
+          channels: Int,
+          direction: Int,
+          mic: Int,
+          target: Int,
+          aidType: Int,
+          acOther: ReadableArray,
+          noOfAids: Int,
+          tubing: Int,
+          vent: Int,
+          RECDmeasType: Int,
+          promise: Promise
+  ) {
+    try {
+      val acDouble = DoubleArray(ac.size()) { ac.getDouble(it) }
+      val bcDouble = DoubleArray(bc.size()) { bc.getDouble(it) }
+      val acOtherDouble = DoubleArray(acOther.size()) { acOther.getDouble(it) }
+
+      val result =
+              nal2Manager.getTccInputOutputCurve(
+                      acDouble,
+                      bcDouble,
+                      graphFreq,
+                      startLevel,
+                      finishLevel,
+                      limiting,
+                      channels,
+                      direction,
+                      mic,
+                      target,
+                      aidType,
+                      acOtherDouble,
+                      noOfAids,
+                      tubing,
+                      vent,
+                      RECDmeasType
+              )
+
+      val writableMap = Arguments.createMap()
+      val tccIOArray = Arguments.createArray()
+      result.TccIO.forEach { tccIOArray.pushDouble(it) }
+      val tccIOunlArray = Arguments.createArray()
+      result.TccIOunl.forEach { tccIOunlArray.pushDouble(it) }
+      val lineTypeArray = Arguments.createArray()
+      result.lineType.forEach { lineTypeArray.pushInt(it) }
+
+      writableMap.putArray("TccIO", tccIOArray)
+      writableMap.putArray("TccIOunl", tccIOunlArray)
+      writableMap.putArray("lineType", lineTypeArray)
+
+      promise.resolve(writableMap)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getTccInputOutputCurve失败", e)
+      promise.reject("NAL2_ERROR", "调用getTccInputOutputCurve失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getEarSimulatorInputOutputCurve(
+          ac: ReadableArray,
+          bc: ReadableArray,
+          graphFreq: Int,
+          startLevel: Int,
+          finishLevel: Int,
+          limiting: Int,
+          channels: Int,
+          direction: Int,
+          mic: Int,
+          target: Int,
+          aidType: Int,
+          acOther: ReadableArray,
+          noOfAids: Int,
+          tubing: Int,
+          vent: Int,
+          RECDmeasType: Int,
+          promise: Promise
+  ) {
+    try {
+      val acDouble = DoubleArray(ac.size()) { ac.getDouble(it) }
+      val bcDouble = DoubleArray(bc.size()) { bc.getDouble(it) }
+      val acOtherDouble = DoubleArray(acOther.size()) { acOther.getDouble(it) }
+
+      val result =
+              nal2Manager.getEarSimulatorInputOutputCurve(
+                      acDouble,
+                      bcDouble,
+                      graphFreq,
+                      startLevel,
+                      finishLevel,
+                      limiting,
+                      channels,
+                      direction,
+                      mic,
+                      target,
+                      aidType,
+                      acOtherDouble,
+                      noOfAids,
+                      tubing,
+                      vent,
+                      RECDmeasType
+              )
+
+      val writableMap = Arguments.createMap()
+      val esIOArray = Arguments.createArray()
+      result.ESIO.forEach { esIOArray.pushDouble(it) }
+      val esIOunlArray = Arguments.createArray()
+      result.ESIOunl.forEach { esIOunlArray.pushDouble(it) }
+      val lineTypeArray = Arguments.createArray()
+      result.lineType.forEach { lineTypeArray.pushInt(it) }
+
+      writableMap.putArray("ESIO", esIOArray)
+      writableMap.putArray("ESIOunl", esIOunlArray)
+      writableMap.putArray("lineType", lineTypeArray)
+
+      promise.resolve(writableMap)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getEarSimulatorInputOutputCurve失败", e)
+      promise.reject("NAL2_ERROR", "调用getEarSimulatorInputOutputCurve失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getSpeechOGram(
+          ac: ReadableArray,
+          bc: ReadableArray,
+          L: Double,
+          limiting: Int,
+          channels: Int,
+          direction: Int,
+          mic: Int,
+          acOther: ReadableArray,
+          noOfAids: Int,
+          promise: Promise
+  ) {
+    try {
+      val acDouble = DoubleArray(ac.size()) { ac.getDouble(it) }
+      val bcDouble = DoubleArray(bc.size()) { bc.getDouble(it) }
+      val acOtherDouble = DoubleArray(acOther.size()) { acOther.getDouble(it) }
+
+      val result =
+              nal2Manager.getSpeechOGram(
+                      acDouble,
+                      bcDouble,
+                      L,
+                      limiting,
+                      channels,
+                      direction,
+                      mic,
+                      acOtherDouble,
+                      noOfAids
+              )
+
+      val writableMap = Arguments.createMap()
+      val rmsArray = Arguments.createArray()
+      result.Speech_rms.forEach { rmsArray.pushDouble(it) }
+      val maxArray = Arguments.createArray()
+      result.Speech_max.forEach { maxArray.pushDouble(it) }
+      val minArray = Arguments.createArray()
+      result.Speech_min.forEach { minArray.pushDouble(it) }
+      val threshArray = Arguments.createArray()
+      result.Speech_thresh.forEach { threshArray.pushDouble(it) }
+
+      writableMap.putArray("Speech_rms", rmsArray)
+      writableMap.putArray("Speech_max", maxArray)
+      writableMap.putArray("Speech_min", minArray)
+      writableMap.putArray("Speech_thresh", threshArray)
+
+      promise.resolve(writableMap)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getSpeechOGram失败", e)
+      promise.reject("NAL2_ERROR", "调用getSpeechOGram失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getAidedThreshold(
+          ac: ReadableArray,
+          bc: ReadableArray,
+          ct: ReadableArray,
+          dbOption: Int,
+          acOther: ReadableArray,
+          noOfAids: Int,
+          limiting: Int,
+          channels: Int,
+          direction: Int,
+          mic: Int,
+          promise: Promise
+  ) {
+    try {
+      val acDouble = DoubleArray(ac.size()) { ac.getDouble(it) }
+      val bcDouble = DoubleArray(bc.size()) { bc.getDouble(it) }
+      val ctDouble = DoubleArray(ct.size()) { ct.getDouble(it) }
+      val acOtherDouble = DoubleArray(acOther.size()) { acOther.getDouble(it) }
+
+      val result =
+              nal2Manager.getAidedThreshold(
+                      acDouble,
+                      bcDouble,
+                      ctDouble,
+                      dbOption,
+                      acOtherDouble,
+                      noOfAids,
+                      limiting,
+                      channels,
+                      direction,
+                      mic
+              )
+
+      val resultArray = Arguments.createArray()
+      result.forEach { resultArray.pushDouble(it) }
+      promise.resolve(resultArray)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getAidedThreshold失败", e)
+      promise.reject("NAL2_ERROR", "调用getAidedThreshold失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getREDDindiv(defValues: Int, promise: Promise) {
+    try {
+      val result = nal2Manager.getREDDindiv(defValues)
+      val resultArray = Arguments.createArray()
+      result.forEach { resultArray.pushDouble(it) }
+      promise.resolve(resultArray)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getREDDindiv失败", e)
+      promise.reject("NAL2_ERROR", "调用getREDDindiv失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getREDDindiv9(defValues: Int, promise: Promise) {
+    try {
+      val result = nal2Manager.getREDDindiv9(defValues)
+      val resultArray = Arguments.createArray()
+      result.forEach { resultArray.pushDouble(it) }
+      promise.resolve(resultArray)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getREDDindiv9失败", e)
+      promise.reject("NAL2_ERROR", "调用getREDDindiv9失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getREURindiv(defValues: Int, dateOfBirth: Int, direction: Int, mic: Int, promise: Promise) {
+    try {
+      val result = nal2Manager.getREURindiv(defValues, dateOfBirth, direction, mic)
+      val resultArray = Arguments.createArray()
+      result.forEach { resultArray.pushDouble(it) }
+      promise.resolve(resultArray)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getREURindiv失败", e)
+      promise.reject("NAL2_ERROR", "调用getREURindiv失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getREURindiv9(defValues: Int, dateOfBirth: Int, direction: Int, mic: Int, promise: Promise) {
+    try {
+      val result = nal2Manager.getREURindiv9(defValues, dateOfBirth, direction, mic)
+      val resultArray = Arguments.createArray()
+      result.forEach { resultArray.pushDouble(it) }
+      promise.resolve(resultArray)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getREURindiv9失败", e)
+      promise.reject("NAL2_ERROR", "调用getREURindiv9失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun setREDDindiv(redd: ReadableArray, defValues: Int, promise: Promise) {
+    try {
+      val reddDouble = DoubleArray(redd.size()) { redd.getDouble(it) }
+      nal2Manager.setREDDindiv(reddDouble, defValues)
+      promise.resolve(true)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用setREDDindiv失败", e)
+      promise.reject("NAL2_ERROR", "调用setREDDindiv失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun setREDDindiv9(redd: ReadableArray, defValues: Int, promise: Promise) {
+    try {
+      val reddDouble = DoubleArray(redd.size()) { redd.getDouble(it) }
+      nal2Manager.setREDDindiv9(reddDouble, defValues)
+      promise.resolve(true)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用setREDDindiv9失败", e)
+      promise.reject("NAL2_ERROR", "调用setREDDindiv9失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun setREURindiv(
+          reur: ReadableArray,
+          defValues: Int,
+          dateOfBirth: Int,
+          direction: Int,
+          mic: Int,
+          promise: Promise
+  ) {
+    try {
+      val reurDouble = DoubleArray(reur.size()) { reur.getDouble(it) }
+      nal2Manager.setREURindiv(reurDouble, defValues, dateOfBirth, direction, mic)
+      promise.resolve(true)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用setREURindiv失败", e)
+      promise.reject("NAL2_ERROR", "调用setREURindiv失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun setREURindiv9(
+          reur: ReadableArray,
+          defValues: Int,
+          dateOfBirth: Int,
+          direction: Int,
+          mic: Int,
+          promise: Promise
+  ) {
+    try {
+      val reurDouble = DoubleArray(reur.size()) { reur.getDouble(it) }
+      nal2Manager.setREURindiv9(reurDouble, defValues, dateOfBirth, direction, mic)
+      promise.resolve(true)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用setREURindiv9失败", e)
+      promise.reject("NAL2_ERROR", "调用setREURindiv9失败: ${e.message}", e)
+    }
+  }
+
   @ReactMethod
   fun processData(
           dateOfBirth: Int,
@@ -730,6 +1123,200 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
     } catch (e: Exception) {
       Log.e("Nal2Module", "处理NAL2数据时出错", e)
       promise.reject("NAL2_ERROR", "处理NAL2数据时出错: ${e.message}", e)
+    }
+  }
+
+  // 数据25-33的新增ReactMethod接口
+
+  @ReactMethod
+  fun getGainAt(
+          freqRequired: Int,
+          targetType: Int,
+          ac: ReadableArray,
+          bc: ReadableArray,
+          L: Double,
+          limiting: Int,
+          channels: Int,
+          direction: Int,
+          mic: Int,
+          acOther: ReadableArray,
+          noOfAids: Int,
+          bandWidth: Int,
+          target: Int,
+          aidType: Int,
+          tubing: Int,
+          vent: Int,
+          RECDmeasType: Int,
+          promise: Promise
+  ) {
+    try {
+      val acDouble = DoubleArray(ac.size()) { ac.getDouble(it) }
+      val bcDouble = DoubleArray(bc.size()) { bc.getDouble(it) }
+      val acOtherDouble = DoubleArray(acOther.size()) { acOther.getDouble(it) }
+
+      val result =
+              nal2Manager.getGainAt(
+                      freqRequired,
+                      targetType,
+                      acDouble,
+                      bcDouble,
+                      L,
+                      limiting,
+                      channels,
+                      direction,
+                      mic,
+                      acOtherDouble,
+                      noOfAids,
+                      bandWidth,
+                      target,
+                      aidType,
+                      tubing,
+                      vent,
+                      RECDmeasType
+              )
+
+      promise.resolve(result)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getGainAt失败", e)
+      promise.reject("NAL2_ERROR", "调用getGainAt失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getMLE(aidType: Int, direction: Int, mic: Int, promise: Promise) {
+    try {
+      val result = nal2Manager.getMLE(aidType, direction, mic)
+      val resultArray = Arguments.createArray()
+      result.forEach { resultArray.pushDouble(it) }
+      promise.resolve(resultArray)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getMLE失败", e)
+      promise.reject("NAL2_ERROR", "调用getMLE失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getReturnValues(promise: Promise) {
+    try {
+      val result = nal2Manager.getReturnValues()
+      val writableMap = Arguments.createMap()
+
+      val mafArray = Arguments.createArray()
+      result.MAF.forEach { mafArray.pushDouble(it) }
+      val bwcArray = Arguments.createArray()
+      result.BWC.forEach { bwcArray.pushDouble(it) }
+      val escdArray = Arguments.createArray()
+      result.ESCD.forEach { escdArray.pushDouble(it) }
+
+      writableMap.putArray("MAF", mafArray)
+      writableMap.putArray("BWC", bwcArray)
+      writableMap.putArray("ESCD", escdArray)
+
+      promise.resolve(writableMap)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getReturnValues失败", e)
+      promise.reject("NAL2_ERROR", "调用getReturnValues失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getTubing(tubing: Int, promise: Promise) {
+    try {
+      val result = nal2Manager.getTubing(tubing)
+      val resultArray = Arguments.createArray()
+      result.forEach { resultArray.pushDouble(it) }
+      promise.resolve(resultArray)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getTubing失败", e)
+      promise.reject("NAL2_ERROR", "调用getTubing失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getTubing9(tubing: Int, promise: Promise) {
+    try {
+      val result = nal2Manager.getTubing9(tubing)
+      val resultArray = Arguments.createArray()
+      result.forEach { resultArray.pushDouble(it) }
+      promise.resolve(resultArray)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getTubing9失败", e)
+      promise.reject("NAL2_ERROR", "调用getTubing9失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getVentOut(vent: Int, promise: Promise) {
+    try {
+      val result = nal2Manager.getVentOut(vent)
+      val resultArray = Arguments.createArray()
+      result.forEach { resultArray.pushDouble(it) }
+      promise.resolve(resultArray)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getVentOut失败", e)
+      promise.reject("NAL2_ERROR", "调用getVentOut失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getVentOut9(vent: Int, promise: Promise) {
+    try {
+      val result = nal2Manager.getVentOut9(vent)
+      val resultArray = Arguments.createArray()
+      result.forEach { resultArray.pushDouble(it) }
+      promise.resolve(resultArray)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getVentOut9失败", e)
+      promise.reject("NAL2_ERROR", "调用getVentOut9失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getSI(s: Int, REAG: ReadableArray, Limit: ReadableArray, promise: Promise) {
+    try {
+      val reagDouble = DoubleArray(REAG.size()) { REAG.getDouble(it) }
+      val limitDouble = DoubleArray(Limit.size()) { Limit.getDouble(it) }
+
+      val result = nal2Manager.getSI(s, reagDouble, limitDouble)
+      promise.resolve(result)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getSI失败", e)
+      promise.reject("NAL2_ERROR", "调用getSI失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  fun getSII(
+          nCompSpeed: Int,
+          Speech_thresh: ReadableArray,
+          s: Int,
+          REAG: ReadableArray,
+          REAGp: ReadableArray,
+          REAGm: ReadableArray,
+          REUR: ReadableArray,
+          promise: Promise
+  ) {
+    try {
+      val speechThreshDouble = DoubleArray(Speech_thresh.size()) { Speech_thresh.getDouble(it) }
+      val reagDouble = DoubleArray(REAG.size()) { REAG.getDouble(it) }
+      val reagpDouble = DoubleArray(REAGp.size()) { REAGp.getDouble(it) }
+      val reagmDouble = DoubleArray(REAGm.size()) { REAGm.getDouble(it) }
+      val reurDouble = DoubleArray(REUR.size()) { REUR.getDouble(it) }
+
+      val result =
+              nal2Manager.getSII(
+                      nCompSpeed,
+                      speechThreshDouble,
+                      s,
+                      reagDouble,
+                      reagpDouble,
+                      reagmDouble,
+                      reurDouble
+              )
+      promise.resolve(result)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用getSII失败", e)
+      promise.reject("NAL2_ERROR", "调用getSII失败: ${e.message}", e)
     }
   }
 }

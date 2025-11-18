@@ -10,7 +10,9 @@
     "android:clean": "cd android && ./gradlew clean",
     "update-config": "node scripts/update-config.js",
     "start-all": "bash scripts/start-all.sh",
-    "stop": "bash scripts/stop-all.sh"
+    "stop": "bash scripts/stop-all.sh",
+    "test": "node tests/nal2_automated_tests.js",
+    "test:watch": "nodemon tests/nal2_automated_tests.js"
   },
   "dependencies": {
     "@types/react": "~18.2.45",

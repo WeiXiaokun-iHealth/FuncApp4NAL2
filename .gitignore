@@ -38,3 +38,6 @@ DerivedData/
 config.json
 .env
 .env.local
+
+# Test results
+tests/results/

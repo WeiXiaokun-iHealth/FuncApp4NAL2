@@ -197,9 +197,168 @@
             color: #999;
         }
 
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s;
+        }
+
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .detail-section {
+            margin-bottom: 25px;
+        }
+
+        .detail-section h3 {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .detail-content {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .detail-content pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Toast弹窗样式 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #34C759;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast-icon {
+            font-size: 20px;
+        }
+
         @media (max-width: 1024px) {
             .container {
                 grid-template-columns: 1fr;
+            }
+
+            .toast {
+                right: 10px;
+                left: 10px;
+                max-width: calc(100% - 20px);
             }
         }
     </style>
@@ -224,6 +383,44 @@
 
             <div class="button-group">
                 <button class="btn-primary" onclick="sendToApp()">发送到App处理</button>
+                <button class="btn-success" onclick="runAllTests()">🧪 一键测试46个函数</button>
+            </div>
+
+            <!-- 测试结果面板 -->
+            <div id="testPanel" style="display: none; margin-top: 30px;">
+                <h2 style="margin-bottom: 15px;">测试结果</h2>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                    <div style="display: flex; gap: 20px; justify-content: space-around;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 32px; font-weight: bold; color: #007AFF;">
+                                <span id="totalTests">0</span>
+                            </div>
+                            <div style="font-size: 12px; color: #666;">总计</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 32px; font-weight: bold; color: #34C759;">
+                                <span id="passedTests">0</span>
+                            </div>
+                            <div style="font-size: 12px; color: #666;">通过</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 32px; font-weight: bold; color: #FF3B30;">
+                                <span id="failedTests">0</span>
+                            </div>
+                            <div style="font-size: 12px; color: #666;">失败</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 18px; font-weight: bold; color: #333;">
+                                <span id="testProgress">0%</span>
+                            </div>
+                            <div style="font-size: 12px; color: #666;">进度</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="testResults"
+                    style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; padding: 15px; background: white;">
+                    <div style="text-align: center; color: #999; padding: 20px;">等待测试...</div>
+                </div>
             </div>
         </div>
 
@@ -232,6 +429,54 @@
             <ul class="history-list" id="historyList">
                 <li class="empty-state">暂无历史记录</li>
             </ul>
+        </div>
+    </div>
+
+    <!-- 测试详情模态框 -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">测试详情</h2>
+                <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-section">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #e9ecef;">
+                        <h3 style="margin: 0; font-size: 16px; color: #666;">📥 Input Parameters</h3>
+                        <button onclick="copyInput()"
+                            style="padding: 6px 12px; background: #007AFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.3s;">📋
+                            复制</button>
+                    </div>
+                    <div class="detail-content">
+                        <pre id="modalInput"></pre>
+                    </div>
+                </div>
+                <div class="detail-section">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #e9ecef;">
+                        <h3 style="margin: 0; font-size: 16px; color: #666;">📤 Output Parameters</h3>
+                        <button onclick="copyOutput()"
+                            style="padding: 6px 12px; background: #007AFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.3s;">📋
+                            复制</button>
+                    </div>
+                    <div class="detail-content">
+                        <pre id="modalOutput"></pre>
+                    </div>
+                </div>
+                <div class="detail-section">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #e9ecef;">
+                        <h3 style="margin: 0; font-size: 16px; color: #666;">📊 Test Info</h3>
+                        <button onclick="copyInfo()"
+                            style="padding: 6px 12px; background: #007AFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.3s;">📋
+                            复制</button>
+                    </div>
+                    <div class="detail-content">
+                        <pre id="modalInfo"></pre>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -478,6 +723,257 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // 全局变量存储当前testData
+        let currentTestData = null;
+
+        // 显示测试详情模态框
+        function showTestDetail(testData) {
+            currentTestData = testData; // 保存当前数据
+            const modal = document.getElementById('detailModal');
+            document.getElementById('modalTitle').textContent = `${testData.sequence_num}. ${testData.function}`;
+
+            // 构建完整的input对象（用于显示）
+            const completeInput = {
+                sequence_num: testData.sequence_num,
+                function: testData.function,
+                input_parameters: testData.input_parameters
+            };
+
+            // 构建完整的output对象（用于显示）
+            const completeOutput = {
+                sequence_num: testData.result.sequence_num || testData.sequence_num,
+                function: testData.result.function || testData.function,
+                return: testData.result.return,
+                output_parameters: testData.result.output_parameters || {}
+            };
+
+            // 显示完整的Input JSON
+            document.getElementById('modalInput').textContent = JSON.stringify(completeInput, null, 2);
+
+            // 显示完整的Output JSON
+            document.getElementById('modalOutput').textContent = JSON.stringify(completeOutput, null, 2);
+
+            // 显示测试信息
+            const info = {
+                'Function': testData.function,
+                'Sequence Number': testData.sequence_num,
+                'Return Code': testData.result.return,
+                'Success': testData.success ? '✅ Yes' : '❌ No',
+                'Duration': `${testData.duration}ms`,
+                'Timestamp': new Date().toLocaleString('zh-CN')
+            };
+            document.getElementById('modalInfo').textContent = JSON.stringify(info, null, 2);
+
+            modal.classList.add('show');
+        }
+
+        // 显示Toast提示
+        function showToast(message, duration = 2000) {
+            // 创建toast元素
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `
+                <span class="toast-icon">✅</span>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+
+            // 显示toast
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+
+            // 隐藏并移除toast
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, duration);
+        }
+
+        // 复制到剪贴板
+        function copyToClipboard(text, message = '复制成功') {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(message);
+            }).catch(err => {
+                showToast('复制失败: ' + err);
+            });
+        }
+
+        // 复制Input - 只复制input_parameters
+        function copyInput() {
+            if (currentTestData) {
+                const text = JSON.stringify(currentTestData.input_parameters, null, 2);
+                copyToClipboard(text, 'Input参数已复制！');
+            }
+        }
+
+        // 复制Output - 只复制output_parameters
+        function copyOutput() {
+            if (currentTestData) {
+                const text = JSON.stringify(currentTestData.result.output_parameters || {}, null, 2);
+                copyToClipboard(text, 'Output参数已复制！');
+            }
+        }
+
+        // 复制测试信息
+        function copyInfo() {
+            const text = document.getElementById('modalInfo').textContent;
+            copyToClipboard(text, '测试信息已复制！');
+        }
+
+        // 关闭模态框
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('show');
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function (event) {
+            const modal = document.getElementById('detailModal');
+            if (event.target === modal) {
+                closeDetailModal();
+            }
+        }
+
+        // 一键测试46个函数
+        async function runAllTests() {
+            if (!wsConnected) {
+                showMessage('WebSocket未连接，无法运行测试', 'error');
+                return;
+            }
+
+            // 显示测试面板
+            document.getElementById('testPanel').style.display = 'block';
+            document.getElementById('testResults').innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">正在加载测试...</div>';
+
+            try {
+                // 获取所有测试文件
+                const response = await fetch('/api/test/run-all');
+                const tests = await response.json();
+
+                document.getElementById('totalTests').textContent = tests.length;
+                document.getElementById('passedTests').textContent = '0';
+                document.getElementById('failedTests').textContent = '0';
+                document.getElementById('testProgress').textContent = '0%';
+
+                let passed = 0;
+                let failed = 0;
+                const results = [];
+
+                // 创建测试结果显示
+                document.getElementById('testResults').innerHTML = '';
+
+                // 逐个运行测试
+                for (let i = 0; i < tests.length; i++) {
+                    const test = tests[i];
+                    const testId = `test-${i}`;
+
+                    // 添加测试项
+                    const testItem = document.createElement('div');
+                    testItem.id = testId;
+                    testItem.style.cssText = 'padding: 10px; margin-bottom: 8px; border-radius: 4px; border: 1px solid #ddd; cursor: pointer; transition: transform 0.2s;';
+                    testItem.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 600;">${test.sequence_num}. ${test.function}</span>
+                    <span id="${testId}-status" style="color: #FFA500;">运行中...</span>
+                </div>
+                <div id="${testId}-details" style="font-size: 12px; color: #666; margin-top: 4px;"></div>
+                `;
+
+                    // 添加鼠标悬停效果
+                    testItem.onmouseenter = () => {
+                        testItem.style.transform = 'translateX(5px)';
+                    };
+                    testItem.onmouseleave = () => {
+                        testItem.style.transform = 'translateX(0)';
+                    };
+
+                    document.getElementById('testResults').appendChild(testItem);
+
+                    // 运行单个测试
+                    const startTime = Date.now();
+                    try {
+                        const testResult = await fetch('/api/nal2/process', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(test)
+                        });
+
+                        const result = await testResult.json();
+                        const duration = Date.now() - startTime;
+                        const success = result.return === 0 && !result.output_parameters?.error;
+
+                        if (success) {
+                            passed++;
+                            testItem.style.borderColor = '#34C759';
+                            testItem.style.backgroundColor = '#F1F9F1';
+                            document.getElementById(`${testId}-status`).textContent = '✅ 通过';
+                            document.getElementById(`${testId}-status`).style.color = '#34C759';
+                        } else {
+                            failed++;
+                            testItem.style.borderColor = '#FF3B30';
+                            testItem.style.backgroundColor = '#FFF5F5';
+                            document.getElementById(`${testId}-status`).textContent = '❌ 失败';
+                            document.getElementById(`${testId}-status`).style.color = '#FF3B30';
+                            document.getElementById(`${testId}-details`).innerHTML = `
+                <div style="background: #FFE6E6; padding: 6px; border-radius: 3px; margin-top: 4px;">
+                    ${result.output_parameters?.error || '未知错误'}
+                </div>
+                `;
+                        }
+
+                        document.getElementById(`${testId}-details`).innerHTML += `<div>耗时: ${duration}ms</div>`;
+
+                        const testData = {
+                            ...test,
+                            result,
+                            success,
+                            duration
+                        };
+
+                        results.push(testData);
+
+                        // 添加点击事件显示详情
+                        testItem.onclick = () => showTestDetail(testData);
+
+                    } catch (error) {
+                        failed++;
+                        testItem.style.borderColor = '#FF3B30';
+                        testItem.style.backgroundColor = '#FFF5F5';
+                        document.getElementById(`${testId}-status`).textContent = '❌ 异常';
+                        document.getElementById(`${testId}-status`).style.color = '#FF3B30';
+                        document.getElementById(`${testId}-details`).innerHTML = `
+                <div style="background: #FFE6E6; padding: 6px; border-radius: 3px; margin-top: 4px;">
+                    ${error.message}
+                </div>
+                `;
+                    }
+
+                    // 更新统计
+                    document.getElementById('passedTests').textContent = passed;
+                    document.getElementById('failedTests').textContent = failed;
+                    document.getElementById('testProgress').textContent = Math.round((i + 1) / tests.length * 100) + '%';
+
+                    // 滚动到底部
+                    document.getElementById('testResults').scrollTop = document.getElementById('testResults').scrollHeight;
+                }
+
+                // 保存测试结果
+                await fetch('/api/test/results', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(results)
+                });
+
+                showMessage(`测试完成！通过: ${passed}, 失败: ${failed}`, passed === tests.length ? 'success' : 'error');
+
+            } catch (error) {
+                showMessage('测试失败: ' + error.message, 'error');
+                console.error('测试失败:', error);
+            }
         }
 
         // 页面加载时初始化

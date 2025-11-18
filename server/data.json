@@ -5,11 +5,39 @@
   },
   "history": [
     {
+      "id": 1763430693287,
+      "function": "AidedThreshold_NL2",
+      "input": "{\n  \"sequence_num\": 10,\n  \"function\": \"AidedThreshold_NL2\",\n  \"input_parameters\": {\n    \"AC\": [35.0, 45.0, 40.0, 40.0, 65.0, 70.0, 70.0, 65.0, 55.0],\n    \"BC\": [35.0, 45.0, 40.0, 40.0, 65.0, 70.0, 999.0, 999.0, 999.0],\n    \"CT\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],\n    \"dbOption\": 0,\n    \"ACother\": [35.0, 45.0, 40.0, 40.0, 65.0, 70.0, 70.0, 65.0, 55.0],\n    \"noOfAids\": 0,\n    \"limiting\": 0,\n    \"channels\": 18,\n    \"direction\": 0,\n    \"mic\": 0\n  }\n}\n",
+      "output": "{\n  \"sequence_num\": 10,\n  \"result\": 0,\n  \"function\": \"AidedThreshold_NL2\",\n  \"return\": 0,\n  \"output_parameters\": {\n    \"AT\": [\n      26.283870312530087,\n      26.283870312530087,\n      26.283870312530087,\n      26.283870312530087,\n      25.29069578489812,\n      23.99192909491785,\n      20.324256734575172,\n      17.951192867882064,\n      12.413374836564234,\n      8.03866118606009,\n      12.948593074683089,\n      18.618218785239975,\n      25.901653840400684,\n      29.506319492521428,\n      34.81628772425254,\n      32.77502191878003,\n      29.579363182774983,\n      26.30208062140801,\n      18.433621274011152\n    ]\n  }\n}",
+      "timestamp": "2025-11-18T01:51:33.287Z"
+    },
+    {
+      "id": 1763372536474,
+      "function": "TccInputOutputCurve_NL2",
+      "input": "{\n  \"sequence_num\": 7,\n  \"function\": \"TccInputOutputCurve_NL2\",\n  \"input_parameters\": {\n    \"AC\": [\n      35,\n      45,\n      40,\n      40,\n      65,\n      70,\n      70,\n      65,\n      55\n    ],\n    \"BC\": [\n      35,\n      45,\n      40,\n      40,\n      65,\n      70,\n      999,\n      999,\n      999\n    ],\n    \"graphFreq\": 10,\n    \"startLevel\": 40,\n    \"finishLevel\": 90,\n    \"limiting\": 0,\n    \"channels\": 18,\n    \"direction\": 0,\n    \"mic\": 0,\n    \"target\": 0,\n    \"aidType\": 0,\n    \"ACother\": [\n      35,\n      45,\n      40,\n      40,\n      65,\n      70,\n      70,\n      65,\n      55\n    ],\n    \"noOfAids\": 0,\n    \"tubing\": 0,\n    \"vent\": 0,\n    \"RECDmeasType\": 0\n  }\n}",
+      "output": "{\n  \"sequence_num\": 7,\n  \"result\": 0,\n  \"function\": \"TccInputOutputCurve_NL2\",\n  \"return\": 0,\n  \"output_parameters\": {\n    \"lineType\": [\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0\n    ],\n    \"TccIOunl\": [\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0\n    ],\n    \"TccIO\": [\n      65.88865901670364,\n      66.88865901670364,\n      67.88865901670364,\n      68.88865901670364,\n      69.88865901670364,\n      70.88865901670364,\n      71.88865901670364,\n      72.88865901670364,\n      73.88865901670364,\n      74.88865901670364,\n      75.88865901670364,\n      76.88865901670364,\n      77.88865901670364,\n      78.88865901670364,\n      79.88865901670364,\n      80.88865901670364,\n      81.88865901670364,\n      82.88865901670364,\n      83.88865901670364,\n      84.88865901670364,\n      85.88865901670364,\n      86.88865901670364,\n      87.35233492568395,\n      87.78280606417805,\n      88.20338682994785,\n      88.61461658098636,\n      89.01702817254798,\n      89.41114796562995,\n      89.79749582181287,\n      90.1765850819342,\n      90.54892252698157,\n      90.9150083202396,\n      91.2753359301556,\n      91.63039203362369,\n      91.98065639949334,\n      92.32660175211873,\n      92.66869361474258,\n      93.00739013250039,\n      93.34314187486333,\n      93.67639161746298,\n      94.00757410346564,\n      94.337115785,\n      94.66543454559675,\n      94.99293940514903,\n      95.32003020954137,\n      95.64709730777943,\n      95.97452122016232,\n      96.30267230172805,\n      96.6319104058409,\n      96.96258455332413,\n      97.2950326129619,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0\n    ]\n  }\n}",
+      "timestamp": "2025-11-17T09:42:16.474Z"
+    },
+    {
+      "id": 1763372178852,
+      "function": "GetREDDindiv",
+      "input": "{\n  \"sequence_num\": 11,\n  \"function\": \"GetREDDindiv\",\n  \"input_parameters\": {\n    \"defValues\": 0\n  }\n}",
+      "output": "{\n  \"sequence_num\": 11,\n  \"result\": 0,\n  \"function\": \"GetREDDindiv\",\n  \"return\": 0,\n  \"output_parameters\": {\n    \"REDD\": [\n      26.2,\n      21.2,\n      19.2,\n      16.2,\n      14.5,\n      13.6,\n      11.7,\n      10.7,\n      9.9,\n      9.5,\n      9.2,\n      11.2,\n      15.9,\n      17.7,\n      15.1,\n      13.4,\n      12.9,\n      16.9,\n      16.9\n    ]\n  }\n}",
+      "timestamp": "2025-11-17T09:36:18.852Z"
+    },
+    {
+      "id": 1763370996353,
+      "function": "未知函数",
+      "input": "{\n  \"AC\": [\n    35,\n    45,\n    40,\n    40,\n    65,\n    70,\n    70,\n    65,\n    55\n  ],\n  \"BC\": [\n    35,\n    45,\n    40,\n    40,\n    65,\n    70,\n    999,\n    999,\n    999\n  ],\n  \"graphFreq\": 10,\n  \"startLevel\": 40,\n  \"finishLevel\": 90,\n  \"limiting\": 0,\n  \"channels\": 18,\n  \"direction\": 0,\n  \"mic\": 0,\n  \"target\": 0,\n  \"ACother\": [\n    35,\n    45,\n    40,\n    40,\n    65,\n    70,\n    70,\n    65,\n    55\n  ],\n  \"noOfAids\": 0\n}",
+      "output": "{\n  \"sequence_num\": 0,\n  \"result\": -1,\n  \"function\": \"unknown\",\n  \"return\": -1,\n  \"output_parameters\": {\n    \"error\": \"缺少必需字段: function\"\n  }\n}",
+      "timestamp": "2025-11-17T09:16:36.353Z"
+    },
+    {
       "id": 1763365435149,
       "function": "RealEarInputOutputCurve_NL2",
-      "input": "{\n  \"sequence_num\": 6,\n  \"function\": \"RealEarInputOutputCurve_NL2\",\n  \"input_parameters\": {\n    \"AC\": [35.0, 45.0, 40.0, 40.0, 65.0, 70.0, 70.0, 65.0, 55.0],\n    \"BC\": [35.0, 45.0, 40.0, 40.0, 65.0, 70.0, 999.0, 999.0, 999.0],\n    \"graphFreq\": 10,\n    \"startLevel\": 40,\n    \"finishLevel\": 90,\n    \"limiting\": 0,\n    \"channels\": 18,\n    \"direction\": 0,\n    \"mic\": 0,\n    \"target\": 0,\n    \"ACother\": [35.0, 45.0, 40.0, 40.0, 65.0, 70.0, 70.0, 65.0, 55.0],\n    \"noOfAids\": 0\n  }\n}\n",
-      "output": "{\n  \"sequence_num\": 6,\n  \"result\": -1,\n  \"function\": \"RealEarInputOutputCurve_NL2\",\n  \"return\": -1,\n  \"output_parameters\": {\n    \"error\": \"未知函数: RealEarInputOutputCurve_NL2\"\n  }\n}",
-      "timestamp": "2025-11-17T07:45:53.914Z"
+      "input": "{\n  \"sequence_num\": 6,\n  \"function\": \"RealEarInputOutputCurve_NL2\",\n  \"input_parameters\": {\n    \"AC\": [\n      35,\n      45,\n      40,\n      40,\n      65,\n      70,\n      70,\n      65,\n      55\n    ],\n    \"BC\": [\n      35,\n      45,\n      40,\n      40,\n      65,\n      70,\n      999,\n      999,\n      999\n    ],\n    \"graphFreq\": 10,\n    \"startLevel\": 40,\n    \"finishLevel\": 90,\n    \"limiting\": 0,\n    \"channels\": 18,\n    \"direction\": 0,\n    \"mic\": 0,\n    \"target\": 0,\n    \"ACother\": [\n      35,\n      45,\n      40,\n      40,\n      65,\n      70,\n      70,\n      65,\n      55\n    ],\n    \"noOfAids\": 0\n  }\n}",
+      "output": "{\n  \"sequence_num\": 6,\n  \"result\": -1,\n  \"function\": \"RealEarInputOutputCurve_NL2\",\n  \"return\": -1,\n  \"output_parameters\": {\n    \"error\": \"Cannot convert undefined value to object\"\n  }\n}",
+      "timestamp": "2025-11-17T09:22:41.530Z"
     },
     {
       "id": 1763365253068,
@@ -30,7 +58,7 @@
       "function": "EarSimulatorGain_NL2",
       "input": "{\n  \"sequence_num\": 5,\n  \"function\": \"EarSimulatorGain_NL2\",\n  \"input_parameters\": {\n    \"AC\": [35.0, 45.0, 40.0, 40.0, 65.0, 70.0, 70.0, 65.0, 55.0],\n    \"BC\": [35.0, 45.0, 40.0, 40.0, 65.0, 70.0, 999.0, 999.0, 999.0],\n    \"L\": 65.0,\n    \"direction\": 0,\n    \"mic\": 0,\n    \"limiting\": 0,\n    \"channels\": 18,\n    \"target\": 0,\n    \"aidType\": 0,\n    \"ACother\": [35.0, 45.0, 40.0, 40.0, 65.0, 70.0, 70.0, 65.0, 55.0],\n    \"noOfAids\": 0,\n    \"tubing\": 0,\n    \"vent\": 0,\n    \"RECDmeasType\": 0\n  }\n}\n",
       "output": "{\n  \"sequence_num\": 5,\n  \"result\": 0,\n  \"function\": \"EarSimulatorGain_NL2\",\n  \"return\": 0,\n  \"output_parameters\": {\n    \"ESG\": [\n      9.303462989316216,\n      9.303462989316216,\n      9.021682342024818,\n      6.793274749734236,\n      8.033359501981767,\n      10.300993884255318,\n      11.939862248056937,\n      15.7080801641325,\n      19.11640948206258,\n      22.928768126685227,\n      26.63658508193421,\n      30.850514594991573,\n      31.829978614461915,\n      29.44891578653197,\n      28.450534110223046,\n      24.655663775590835,\n      23.65538385301832,\n      30.456940769243793,\n      31.96401618909917\n    ],\n    \"lineType\": [\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0\n    ]\n  }\n}",
-      "timestamp": "2025-11-17T07:42:06.590Z"
+      "timestamp": "2025-11-17T08:51:58.519Z"
     },
     {
       "id": 1763350284016,
@@ -56,9 +84,9 @@
     {
       "id": 1763350221433,
       "function": "CompressionRatio_NL2",
-      "input": "{\n  \"sequence_num\": 128,\n  \"function\": \"CompressionRatio_NL2\",\n  \"input_parameters\": {\n    \"CR\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],\n    \"channels\": 1,\n    \"centerFreq\": 1,\n    \"AC\": [500, 1000, 2000, 4000],\n    \"BC\": [500, 1000, 2000, 4000],\n    \"direction\": 0,\n    \"mic\": 0,\n    \"limiting\": 0,\n    \"ACother\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],\n    \"noOfAids\": 0\n  }\n}\n",
-      "output": "{\n  \"sequence_num\": 128,\n  \"result\": 0,\n  \"function\": \"CompressionRatio_NL2\",\n  \"return\": 0,\n  \"output_parameters\": {\n    \"CR\": [\n      0,\n      999,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0\n    ]\n  }\n}",
-      "timestamp": "2025-11-17T03:30:21.434Z"
+      "input": "{\n  \"sequence_num\": 22,\n  \"function\": \"CompressionRatio_NL2\",\n  \"input_parameters\": {\n    \"CR\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],\n    \"channels\": 18,\n    \"centreFreq\": [250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000, 22000, 24000],\n    \"AC\": [35.0, 45.0, 40.0, 40.0, 65.0, 70.0, 70.0, 65.0, 55.0],\n    \"BC\": [35.0, 45.0, 40.0, 40.0, 65.0, 70.0, 999.0, 999.0, 999.0],\n    \"direction\": 0,\n    \"mic\": 0,\n    \"limiting\": 0,\n    \"ACother\": [35.0, 45.0, 40.0, 40.0, 65.0, 70.0, 70.0, 65.0, 55.0],\n    \"noOfAids\": 0\n  }\n}\n",
+      "output": "{\n  \"sequence_num\": 22,\n  \"result\": -1,\n  \"function\": \"CompressionRatio_NL2\",\n  \"return\": -1,\n  \"output_parameters\": {\n    \"error\": \"缺少必需参数: centerFreq\"\n  }\n}",
+      "timestamp": "2025-11-18T00:52:15.867Z"
     },
     {
       "id": 1763350214816,
@@ -154,9 +182,9 @@
     {
       "id": 1763350108669,
       "function": "CenterFrequencies",
-      "input": "{\n  \"sequence_num\": 123,\n  \"function\": \"CenterFrequencies\",\n  \"input_parameters\": {\n    \"channels\": 18,\n    \"CFArray\": [250.0, 500.0, 750.0, 1000.0, 1500.0, 2000.0, 3000.0, 4000.0, 6000.0, 8000.0, 10000.0, 12000.0, 14000.0, 16000.0, 18000.0, 20000.0, 22000.0, 24000.0]\n  }\n}\n",
-      "output": "{\n  \"sequence_num\": 123,\n  \"result\": -1,\n  \"function\": \"CenterFrequencies\",\n  \"return\": -1,\n  \"output_parameters\": {\n    \"error\": \"调用CenterFrequencies失败: Cannot convert argument of type class com.facebook.react.bridge.ReadableNativeArray\"\n  }\n}",
-      "timestamp": "2025-11-17T03:28:28.669Z"
+      "input": "{\n  \"sequence_num\": 20,\n  \"function\": \"CenterFrequencies\",\n  \"input_parameters\": {\n    \"channels\": 18\n  }\n}\n",
+      "output": "{\n  \"sequence_num\": 20,\n  \"result\": -1,\n  \"function\": \"CenterFrequencies\",\n  \"return\": -1,\n  \"output_parameters\": {\n    \"error\": \"缺少必需参数: CFArray\"\n  }\n}",
+      "timestamp": "2025-11-18T01:29:07.578Z"
     },
     {
       "id": 1763346828066,

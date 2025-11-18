@@ -15,7 +15,7 @@ import { NAL2Bridge } from './utils/NAL2Bridge';
 export default function App() {
   const APP_NAME = 'FuncApp4NAL2';
   const APP_VERSION = '1.0.0';
-  const WS_URL = 'ws://172.29.2.4:3000';
+  const WS_URL = 'ws://172.29.0.106:3000';
   
   const [inputData, setInputData] = useState('');
   const [outputData, setOutputData] = useState('');
@@ -48,6 +48,9 @@ export default function App() {
         } else if (data.type === 'process_input') {
           // 收到Web端发送的input，自动处理
           handleAutoProcess(data.input, websocket);
+        } else if (data.type === 'nal2_request') {
+          // 收到测试系统的NAL2请求
+          handleNAL2Request(data.data, websocket);
         }
       } catch (error) {
         console.error('解析WebSocket消息错误:', error);
@@ -91,14 +94,58 @@ export default function App() {
 
   // 初始化WebSocket连接
   useEffect(() => {
-    const websocket = connectWebSocket();
+    connectWebSocket();
     
     return () => {
-      if (websocket) {
-        websocket.close();
+      if (ws.current) {
+        ws.current.close();
       }
     };
   }, []);
+
+  // 处理NAL2测试请求
+  const handleNAL2Request = async (requestData, websocket) => {
+    try {
+      console.log('[App] 处理NAL2测试请求:', requestData);
+      
+      // 解析输入数据
+      const parsedData = DataParser.parseInput(requestData);
+      
+      // 处理NAL2函数
+      const result = await NAL2Bridge.processFunction(parsedData);
+      
+      console.log('[App] NAL2处理结果:', result);
+      
+      // 发送响应回服务器
+      if (websocket && websocket.readyState === WebSocket.OPEN) {
+        websocket.send(JSON.stringify({
+          type: 'nal2_response',
+          sequence_num: requestData.sequence_num,
+          result: result
+        }));
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('[App] NAL2处理失败:', error);
+      
+      // 发送错误响应
+      if (websocket && websocket.readyState === WebSocket.OPEN) {
+        websocket.send(JSON.stringify({
+          type: 'nal2_response',
+          sequence_num: requestData.sequence_num || 0,
+          result: {
+            sequence_num: requestData.sequence_num || 0,
+            function: requestData.function || 'unknown',
+            return: -1,
+            output_parameters: {
+              error: error.message
+            }
+          }
+        }));
+      }
+    }
+  };
 
   // 自动处理Web发送的input
   const handleAutoProcess = async (input, websocket) => {
@@ -152,7 +199,7 @@ export default function App() {
       setLoading(true);
       
       // 配置本地服务器API地址 - 自动从config.json更新
-      const apiUrl = 'http://172.29.2.4:3000/api/current-params';
+      const apiUrl = 'http://172.29.0.106:3000/api/current-params';
       
       // 请求API获取参数
       const response = await fetch(apiUrl, {
@@ -187,7 +234,7 @@ export default function App() {
       setLoading(true);
       
       // 配置本地服务器API地址 - 自动从config.json更新
-      const apiUrl = 'http://172.29.2.4:3000/api/current-params';
+      const apiUrl = 'http://172.29.0.106:3000/api/current-params';
       
       // 将当前output发送到服务器
       const response = await fetch(apiUrl, {

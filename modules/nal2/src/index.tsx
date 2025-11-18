@@ -318,6 +318,241 @@ export function earSimulatorGain(
   );
 }
 
+// 数据6-18的接口函数
+
+export function getRealEarInputOutputCurve(
+  ac: number[],
+  bc: number[],
+  graphFreq: number,
+  startLevel: number,
+  finishLevel: number,
+  limiting: number,
+  channels: number,
+  direction: number,
+  mic: number,
+  target: number,
+  acOther: number[],
+  noOfAids: number
+): Promise<{ REIO: number[]; REIOunl: number[] }> {
+  return Nal2.getRealEarInputOutputCurve(
+    Array.from(ac),
+    Array.from(bc),
+    graphFreq,
+    startLevel,
+    finishLevel,
+    limiting,
+    channels,
+    direction,
+    mic,
+    target,
+    Array.from(acOther),
+    noOfAids
+  );
+}
+
+export function getTccInputOutputCurve(
+  ac: number[],
+  bc: number[],
+  graphFreq: number,
+  startLevel: number,
+  finishLevel: number,
+  limiting: number,
+  channels: number,
+  direction: number,
+  mic: number,
+  target: number,
+  aidType: number,
+  acOther: number[],
+  noOfAids: number,
+  tubing: number,
+  vent: number,
+  RECDmeasType: number
+): Promise<{ TccIO: number[]; TccIOunl: number[]; lineType: number[] }> {
+  return Nal2.getTccInputOutputCurve(
+    Array.from(ac),
+    Array.from(bc),
+    graphFreq,
+    startLevel,
+    finishLevel,
+    limiting,
+    channels,
+    direction,
+    mic,
+    target,
+    aidType,
+    Array.from(acOther),
+    noOfAids,
+    tubing,
+    vent,
+    RECDmeasType
+  );
+}
+
+export function getEarSimulatorInputOutputCurve(
+  ac: number[],
+  bc: number[],
+  graphFreq: number,
+  startLevel: number,
+  finishLevel: number,
+  limiting: number,
+  channels: number,
+  direction: number,
+  mic: number,
+  target: number,
+  aidType: number,
+  acOther: number[],
+  noOfAids: number,
+  tubing: number,
+  vent: number,
+  RECDmeasType: number
+): Promise<{ ESIO: number[]; ESIOunl: number[]; lineType: number[] }> {
+  return Nal2.getEarSimulatorInputOutputCurve(
+    Array.from(ac),
+    Array.from(bc),
+    graphFreq,
+    startLevel,
+    finishLevel,
+    limiting,
+    channels,
+    direction,
+    mic,
+    target,
+    aidType,
+    Array.from(acOther),
+    noOfAids,
+    tubing,
+    vent,
+    RECDmeasType
+  );
+}
+
+export function getSpeechOGram(
+  ac: number[],
+  bc: number[],
+  L: number,
+  limiting: number,
+  channels: number,
+  direction: number,
+  mic: number,
+  acOther: number[],
+  noOfAids: number
+): Promise<{
+  Speech_rms: number[];
+  Speech_max: number[];
+  Speech_min: number[];
+  Speech_thresh: number[];
+}> {
+  return Nal2.getSpeechOGram(
+    Array.from(ac),
+    Array.from(bc),
+    L,
+    limiting,
+    channels,
+    direction,
+    mic,
+    Array.from(acOther),
+    noOfAids
+  );
+}
+
+export function getAidedThreshold(
+  ac: number[],
+  bc: number[],
+  ct: number[],
+  dbOption: number,
+  acOther: number[],
+  noOfAids: number,
+  limiting: number,
+  channels: number,
+  direction: number,
+  mic: number
+): Promise<number[]> {
+  return Nal2.getAidedThreshold(
+    Array.from(ac),
+    Array.from(bc),
+    Array.from(ct),
+    dbOption,
+    Array.from(acOther),
+    noOfAids,
+    limiting,
+    channels,
+    direction,
+    mic
+  );
+}
+
+export function getREDDindiv(defValues: number): Promise<number[]> {
+  return Nal2.getREDDindiv(defValues);
+}
+
+export function getREDDindiv9(defValues: number): Promise<number[]> {
+  return Nal2.getREDDindiv9(defValues);
+}
+
+export function getREURindiv(
+  defValues: number,
+  dateOfBirth: number,
+  direction: number,
+  mic: number
+): Promise<number[]> {
+  return Nal2.getREURindiv(defValues, dateOfBirth, direction, mic);
+}
+
+export function getREURindiv9(
+  defValues: number,
+  dateOfBirth: number,
+  direction: number,
+  mic: number
+): Promise<number[]> {
+  return Nal2.getREURindiv9(defValues, dateOfBirth, direction, mic);
+}
+
+export function setREDDindiv(
+  redd: number[],
+  defValues: number
+): Promise<boolean> {
+  return Nal2.setREDDindiv(Array.from(redd), defValues);
+}
+
+export function setREDDindiv9(
+  redd: number[],
+  defValues: number
+): Promise<boolean> {
+  return Nal2.setREDDindiv9(Array.from(redd), defValues);
+}
+
+export function setREURindiv(
+  reur: number[],
+  defValues: number,
+  dateOfBirth: number,
+  direction: number,
+  mic: number
+): Promise<boolean> {
+  return Nal2.setREURindiv(
+    Array.from(reur),
+    defValues,
+    dateOfBirth,
+    direction,
+    mic
+  );
+}
+
+export function setREURindiv9(
+  reur: number[],
+  defValues: number,
+  dateOfBirth: number,
+  direction: number,
+  mic: number
+): Promise<boolean> {
+  return Nal2.setREURindiv9(
+    Array.from(reur),
+    defValues,
+    dateOfBirth,
+    direction,
+    mic
+  );
+}
+
 export function processData(params: {
   dateOfBirth: number;
   adultChild: number;
@@ -362,5 +597,107 @@ export function processData(params: {
     convertedBc,
     convertedCalcCh,
     convertedLevels
+  );
+}
+
+// 数据25-33的新增接口函数
+
+export function getGainAt(
+  freqRequired: number,
+  targetType: number,
+  ac: number[],
+  bc: number[],
+  L: number,
+  limiting: number,
+  channels: number,
+  direction: number,
+  mic: number,
+  acOther: number[],
+  noOfAids: number,
+  bandWidth: number,
+  target: number,
+  aidType: number,
+  tubing: number,
+  vent: number,
+  RECDmeasType: number
+): Promise<number> {
+  return Nal2.getGainAt(
+    freqRequired,
+    targetType,
+    Array.from(ac),
+    Array.from(bc),
+    L,
+    limiting,
+    channels,
+    direction,
+    mic,
+    Array.from(acOther),
+    noOfAids,
+    bandWidth,
+    target,
+    aidType,
+    tubing,
+    vent,
+    RECDmeasType
+  );
+}
+
+export function getMLE(
+  aidType: number,
+  direction: number,
+  mic: number
+): Promise<number[]> {
+  return Nal2.getMLE(aidType, direction, mic);
+}
+
+export function getReturnValues(): Promise<{
+  MAF: number[];
+  BWC: number[];
+  ESCD: number[];
+}> {
+  return Nal2.getReturnValues();
+}
+
+export function getTubing(tubing: number): Promise<number[]> {
+  return Nal2.getTubing(tubing);
+}
+
+export function getTubing9(tubing: number): Promise<number[]> {
+  return Nal2.getTubing9(tubing);
+}
+
+export function getVentOut(vent: number): Promise<number[]> {
+  return Nal2.getVentOut(vent);
+}
+
+export function getVentOut9(vent: number): Promise<number[]> {
+  return Nal2.getVentOut9(vent);
+}
+
+export function getSI(
+  s: number,
+  REAG: number[],
+  Limit: number[]
+): Promise<number> {
+  return Nal2.getSI(s, Array.from(REAG), Array.from(Limit));
+}
+
+export function getSII(
+  nCompSpeed: number,
+  Speech_thresh: number[],
+  s: number,
+  REAG: number[],
+  REAGp: number[],
+  REAGm: number[],
+  REUR: number[]
+): Promise<number> {
+  return Nal2.getSII(
+    nCompSpeed,
+    Array.from(Speech_thresh),
+    s,
+    Array.from(REAG),
+    Array.from(REAGp),
+    Array.from(REAGm),
+    Array.from(REUR)
   );
 }

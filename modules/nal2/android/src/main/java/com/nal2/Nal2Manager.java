@@ -195,6 +195,209 @@ public class Nal2Manager {
         NativeManager.getInstance(context).SetRECDt_indiv9_NL2(recdt);
     }
 
+    // 数据6-18的方法实现
+
+    // RealEarInputOutputCurve_NL2
+    public static class InputOutputCurveResult {
+        public double[] IO;
+        public double[] IOunl;
+
+        public InputOutputCurveResult(double[] io, double[] iounl) {
+            this.IO = io;
+            this.IOunl = iounl;
+        }
+    }
+
+    public InputOutputCurveResult getRealEarInputOutputCurve(double[] ac, double[] bc, int graphFreq, int startLevel,
+            int finishLevel, int limiting, int channels, int direction, int mic, int target, double[] acOther,
+            int noOfAids) {
+        try {
+            double[] reio = new double[100];
+            double[] reiounl = new double[100];
+            OutputResult result = NativeManager.getInstance(context).RealEarInputOutputCurve_NL2(reio, reiounl, ac, bc,
+                    graphFreq, startLevel, finishLevel, limiting, channels, direction, mic, target, acOther, noOfAids);
+            return new InputOutputCurveResult(getOutputData(result, reio), reiounl);
+        } catch (Exception e) {
+            Log.e(TAG, "获取RealEarInputOutputCurve失败", e);
+            return new InputOutputCurveResult(new double[100], new double[100]);
+        }
+    }
+
+    // TccInputOutputCurve_NL2
+    public static class TccInputOutputCurveResult {
+        public double[] TccIO;
+        public double[] TccIOunl;
+        public int[] lineType;
+
+        public TccInputOutputCurveResult(double[] tccIO, double[] tccIOunl, int[] lineType) {
+            this.TccIO = tccIO;
+            this.TccIOunl = tccIOunl;
+            this.lineType = lineType;
+        }
+    }
+
+    public TccInputOutputCurveResult getTccInputOutputCurve(double[] ac, double[] bc, int graphFreq, int startLevel,
+            int finishLevel, int limiting, int channels, int direction, int mic, int target, int aidType,
+            double[] acOther, int noOfAids, int tubing, int vent, int RECDmeasType) {
+        try {
+            double[] tccIO = new double[100];
+            double[] tccIOunl = new double[100];
+            int[] lineType = new int[100];
+            OutputResult result = NativeManager.getInstance(context).TccInputOutputCurve_NL2(tccIO, tccIOunl, ac, bc,
+                    graphFreq, startLevel, finishLevel, limiting, channels, direction, mic, target, aidType, acOther,
+                    noOfAids, tubing, vent, RECDmeasType, lineType);
+            return new TccInputOutputCurveResult(getOutputData(result, tccIO), tccIOunl, lineType);
+        } catch (Exception e) {
+            Log.e(TAG, "获取TccInputOutputCurve失败", e);
+            return new TccInputOutputCurveResult(new double[100], new double[100], new int[100]);
+        }
+    }
+
+    // EarSimulatorInputOutputCurve_NL2
+    public static class EarSimulatorInputOutputCurveResult {
+        public double[] ESIO;
+        public double[] ESIOunl;
+        public int[] lineType;
+
+        public EarSimulatorInputOutputCurveResult(double[] esIO, double[] esIOunl, int[] lineType) {
+            this.ESIO = esIO;
+            this.ESIOunl = esIOunl;
+            this.lineType = lineType;
+        }
+    }
+
+    public EarSimulatorInputOutputCurveResult getEarSimulatorInputOutputCurve(double[] ac, double[] bc, int graphFreq,
+            int startLevel, int finishLevel, int limiting, int channels, int direction, int mic, int target,
+            int aidType, double[] acOther, int noOfAids, int tubing, int vent, int RECDmeasType) {
+        try {
+            double[] esIO = new double[100];
+            double[] esIOunl = new double[100];
+            int[] lineType = new int[100];
+            OutputResult result = NativeManager.getInstance(context).EarSimulatorInputOutputCurve_NL2(esIO, esIOunl, ac,
+                    bc, graphFreq, startLevel, finishLevel, limiting, channels, direction, mic, target, aidType,
+                    acOther, noOfAids, tubing, vent, RECDmeasType, lineType);
+            return new EarSimulatorInputOutputCurveResult(getOutputData(result, esIO), esIOunl, lineType);
+        } catch (Exception e) {
+            Log.e(TAG, "获取EarSimulatorInputOutputCurve失败", e);
+            return new EarSimulatorInputOutputCurveResult(new double[100], new double[100], new int[100]);
+        }
+    }
+
+    // Speech_o_Gram_NL2
+    public static class SpeechOGramResult {
+        public double[] Speech_rms;
+        public double[] Speech_max;
+        public double[] Speech_min;
+        public double[] Speech_thresh;
+
+        public SpeechOGramResult(double[] rms, double[] max, double[] min, double[] thresh) {
+            this.Speech_rms = rms;
+            this.Speech_max = max;
+            this.Speech_min = min;
+            this.Speech_thresh = thresh;
+        }
+    }
+
+    public SpeechOGramResult getSpeechOGram(double[] ac, double[] bc, double L, int limiting, int channels,
+            int direction, int mic, double[] acOther, int noOfAids) {
+        try {
+            double[] speechRms = new double[19];
+            double[] speechMax = new double[19];
+            double[] speechMin = new double[19];
+            double[] speechThresh = new double[19];
+            OutputResult result = NativeManager.getInstance(context).Speech_o_Gram_NL2(speechRms, speechMax, speechMin,
+                    speechThresh, ac, bc, L, limiting, channels, direction, mic, acOther, noOfAids);
+            return new SpeechOGramResult(getOutputData(result, speechRms), speechMax, speechMin, speechThresh);
+        } catch (Exception e) {
+            Log.e(TAG, "获取SpeechOGram失败", e);
+            return new SpeechOGramResult(new double[19], new double[19], new double[19], new double[19]);
+        }
+    }
+
+    // AidedThreshold_NL2
+    public double[] getAidedThreshold(double[] ac, double[] bc, double[] ct, int dbOption, double[] acOther,
+            int noOfAids, int limiting, int channels, int direction, int mic) {
+        try {
+            double[] at = new double[19];
+            OutputResult result = NativeManager.getInstance(context).AidedThreshold_NL2(at, ac, bc, ct, dbOption,
+                    acOther, noOfAids, limiting, channels, direction, mic);
+            return getOutputData(result, at);
+        } catch (Exception e) {
+            Log.e(TAG, "获取AidedThreshold失败", e);
+            return new double[19];
+        }
+    }
+
+    // GetREDDindiv
+    public double[] getREDDindiv(int defValues) {
+        try {
+            double[] redd = new double[19];
+            OutputResult result = NativeManager.getInstance(context).GetREDDindiv(redd, defValues);
+            return getOutputData(result, redd);
+        } catch (Exception e) {
+            Log.e(TAG, "获取REDDindiv失败", e);
+            return new double[19];
+        }
+    }
+
+    // GetREDDindiv9
+    public double[] getREDDindiv9(int defValues) {
+        try {
+            double[] redd = new double[9];
+            OutputResult result = NativeManager.getInstance(context).GetREDDindiv9(redd, defValues);
+            return getOutputData(result, redd);
+        } catch (Exception e) {
+            Log.e(TAG, "获取REDDindiv9失败", e);
+            return new double[9];
+        }
+    }
+
+    // GetREURindiv
+    public double[] getREURindiv(int defValues, int dateOfBirth, int direction, int mic) {
+        try {
+            double[] reur = new double[19];
+            OutputResult result = NativeManager.getInstance(context).GetREURindiv(reur, defValues, dateOfBirth,
+                    direction, mic);
+            return getOutputData(result, reur);
+        } catch (Exception e) {
+            Log.e(TAG, "获取REURindiv失败", e);
+            return new double[19];
+        }
+    }
+
+    // GetREURindiv9
+    public double[] getREURindiv9(int defValues, int dateOfBirth, int direction, int mic) {
+        try {
+            double[] reur = new double[9];
+            OutputResult result = NativeManager.getInstance(context).GetREURindiv9(reur, defValues, dateOfBirth,
+                    direction, mic);
+            return getOutputData(result, reur);
+        } catch (Exception e) {
+            Log.e(TAG, "获取REURindiv9失败", e);
+            return new double[9];
+        }
+    }
+
+    // SetREDDindiv
+    public void setREDDindiv(double[] redd, int defValues) {
+        NativeManager.getInstance(context).SetREDDindiv(redd, defValues);
+    }
+
+    // SetREDDindiv9
+    public void setREDDindiv9(double[] redd, int defValues) {
+        NativeManager.getInstance(context).SetREDDindiv9(redd, defValues);
+    }
+
+    // SetREURindiv
+    public void setREURindiv(double[] reur, int defValues, int dateOfBirth, int direction, int mic) {
+        NativeManager.getInstance(context).SetREURindiv(reur, defValues, dateOfBirth, direction, mic);
+    }
+
+    // SetREURindiv9
+    public void setREURindiv9(double[] reur, int defValues, int dateOfBirth, int direction, int mic) {
+        NativeManager.getInstance(context).SetREURindiv9(reur, defValues, dateOfBirth, direction, mic);
+    }
+
     public double[] getCompressionRatio(double[] cr, int channels, int centerFreq, double[] ac, double[] bc,
             int direction, int mic, int limiting, double[] acOther, int noOfAids) {
         try {
@@ -295,6 +498,133 @@ public class Nal2Manager {
         } catch (Exception e) {
             Log.e(TAG, "获取OutputResult数据失败", e);
             return defaultValue;
+        }
+    }
+
+    // 数据25-33的新增方法实现
+
+    // GainAt_NL2 - 直接返回double值
+    public double getGainAt(int freqRequired, int targetType, double[] ac, double[] bc, double L, int limiting,
+            int channels, int direction, int mic, double[] acOther, int noOfAids, int bandWidth, int target,
+            int aidType, int tubing, int vent, int RECDmeasType) {
+        try {
+            // GainAt_NL2直接返回double值
+            return NativeManager.getInstance(context).GainAt_NL2(freqRequired, targetType, ac, bc,
+                    L, limiting, channels, direction, mic, acOther, noOfAids, bandWidth, target, aidType, tubing, vent,
+                    RECDmeasType);
+        } catch (Exception e) {
+            Log.e(TAG, "获取GainAt失败", e);
+            return 0.0;
+        }
+    }
+
+    // GetMLE
+    public double[] getMLE(int aidType, int direction, int mic) {
+        try {
+            double[] mle = new double[19];
+            OutputResult result = NativeManager.getInstance(context).GetMLE(mle, aidType, direction, mic);
+            return getOutputData(result, mle);
+        } catch (Exception e) {
+            Log.e(TAG, "获取MLE失败", e);
+            return new double[19];
+        }
+    }
+
+    // ReturnValues_NL2
+    public static class ReturnValuesResult {
+        public double[] MAF;
+        public double[] BWC;
+        public double[] ESCD;
+
+        public ReturnValuesResult(double[] maf, double[] bwc, double[] escd) {
+            this.MAF = maf;
+            this.BWC = bwc;
+            this.ESCD = escd;
+        }
+    }
+
+    public ReturnValuesResult getReturnValues() {
+        try {
+            double[] maf = new double[19];
+            double[] bwc = new double[19];
+            double[] escd = new double[19];
+            OutputResult result = NativeManager.getInstance(context).ReturnValues_NL2(maf, bwc, escd);
+            return new ReturnValuesResult(getOutputData(result, maf), bwc, escd);
+        } catch (Exception e) {
+            Log.e(TAG, "获取ReturnValues失败", e);
+            return new ReturnValuesResult(new double[19], new double[19], new double[19]);
+        }
+    }
+
+    // GetTubing_NL2
+    public double[] getTubing(int tubing) {
+        try {
+            double[] tubingArray = new double[19];
+            OutputResult result = NativeManager.getInstance(context).GetTubing_NL2(tubingArray, tubing);
+            return getOutputData(result, tubingArray);
+        } catch (Exception e) {
+            Log.e(TAG, "获取Tubing失败", e);
+            return new double[19];
+        }
+    }
+
+    // GetTubing9_NL2
+    public double[] getTubing9(int tubing) {
+        try {
+            double[] tubingArray = new double[9];
+            OutputResult result = NativeManager.getInstance(context).GetTubing9_NL2(tubingArray, tubing);
+            return getOutputData(result, tubingArray);
+        } catch (Exception e) {
+            Log.e(TAG, "获取Tubing9失败", e);
+            return new double[9];
+        }
+    }
+
+    // GetVentOut_NL2
+    public double[] getVentOut(int vent) {
+        try {
+            double[] ventOut = new double[19];
+            OutputResult result = NativeManager.getInstance(context).GetVentOut_NL2(ventOut, vent);
+            return getOutputData(result, ventOut);
+        } catch (Exception e) {
+            Log.e(TAG, "获取VentOut失败", e);
+            return new double[19];
+        }
+    }
+
+    // GetVentOut9_NL2
+    public double[] getVentOut9(int vent) {
+        try {
+            double[] ventOut = new double[9];
+            OutputResult result = NativeManager.getInstance(context).GetVentOut9_NL2(ventOut, vent);
+            return getOutputData(result, ventOut);
+        } catch (Exception e) {
+            Log.e(TAG, "获取VentOut9失败", e);
+            return new double[9];
+        }
+    }
+
+    // Get_SI_NL2 - 直接返回double值
+    public double getSI(int s, double[] REAG, double[] Limit) {
+        try {
+            // Get_SI_NL2直接返回double值，参数顺序: s, REAG, Limit
+            return NativeManager.getInstance(context).Get_SI_NL2(s, REAG, Limit);
+        } catch (Exception e) {
+            Log.e(TAG, "获取SI失败", e);
+            return 0.0;
+        }
+    }
+
+    // Get_SII - 直接返回double值
+    public double getSII(int nCompSpeed, double[] Speech_thresh, int s, double[] REAG, double[] REAGp, double[] REAGm,
+            double[] REUR) {
+        try {
+            // Get_SII直接返回double值，参数顺序: nCompSpeed, Speech_thresh, s, REAG, REAGp, REAGm,
+            // REUR
+            return NativeManager.getInstance(context).Get_SII(nCompSpeed, Speech_thresh, s, REAG, REAGp, REAGm, REUR);
+        } catch (Exception e) {
+            Log.e(TAG, "获取SII失败", e);
+            return 0.0;
         }
     }
 }

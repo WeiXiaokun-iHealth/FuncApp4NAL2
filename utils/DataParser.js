@@ -3,7 +3,7 @@
  * 数据解析模块 - 解析来自WebSocket的JSON数据
  */
 
-export class DataParser {
+class DataParser {
   /**
    * 解析输入的JSON字符串
    * @param {string} jsonString - JSON字符串
@@ -129,4 +129,15 @@ export class DataParser {
   static getNumberParam(params, key, defaultValue = 0) {
     return params[key] !== undefined ? Number(params[key]) : defaultValue;
   }
+
+  /**
+   * 简单的parseData方法，适配测试
+   * @param {Object} data - JSON数据对象
+   * @returns {Object} 解析后的数据
+   */
+  static parseData(data) {
+    return this.parseInput(data);
+  }
 }
+
+module.exports = { DataParser };
