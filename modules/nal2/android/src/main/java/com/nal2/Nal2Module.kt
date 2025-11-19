@@ -114,18 +114,6 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
   }
 
   @ReactMethod
-  fun centerFrequencies(channels: Int, cfArray: ReadableArray, promise: Promise) {
-    try {
-      // CenterFrequencies通常只是设置中心频率，可能不返回结果
-      // 这里简单返回输入的频率数组
-      promise.resolve(cfArray)
-    } catch (e: Exception) {
-      Log.e("Nal2Module", "调用CenterFrequencies失败", e)
-      promise.reject("NAL2_ERROR", "调用CenterFrequencies失败: ${e.message}", e)
-    }
-  }
-
-  @ReactMethod
   fun compressionThreshold(
           WBCT: Int,
           aidType: Int,
@@ -395,10 +383,28 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
   }
 
   @ReactMethod
+  fun centerFrequencies(channels: Int, promise: Promise) {
+    try {
+      // CFArray是输出参数，SDK内部会填充
+      val cfArrayDouble = DoubleArray(19)
+      val result = nal2Manager.getCenterFrequencies(channels, cfArrayDouble)
+
+      val resultArray = Arguments.createArray()
+      result.forEach { resultArray.pushInt(it) }
+
+      Log.d("Nal2Module", "centerFrequencies成功: channels=$channels, result size=${result.size}")
+      promise.resolve(resultArray)
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "调用centerFrequencies失败", e)
+      e.printStackTrace()
+      promise.reject("NAL2_ERROR", "调用centerFrequencies失败: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
   fun compressionRatio(
-          cr: ReadableArray,
           channels: Int,
-          centerFreq: Int,
+          centreFreq: ReadableArray,
           ac: ReadableArray,
           bc: ReadableArray,
           direction: Int,
@@ -409,16 +415,45 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
           promise: Promise
   ) {
     try {
-      val crDouble = DoubleArray(cr.size()) { cr.getDouble(it) }
+      // CR数组固定为19个元素（third-octave frequencies），是输出参数
+      val crDouble = DoubleArray(19)
+
+      Log.d(
+              "Nal2Module",
+              "CompressionRatio输入: channels=$channels, centreFreq.size=${centreFreq.size()}, ac.size=${ac.size()}, bc.size=${bc.size()}, acOther.size=${acOther.size()}"
+      )
+
+      // centreFreq可能是Int数组或Double数组，需要兼容处理
+      val centreFreqInt =
+              IntArray(centreFreq.size()) { i ->
+                val value = centreFreq.getDynamic(i)
+                when {
+                  value.type == com.facebook.react.bridge.ReadableType.Number -> {
+                    // 尝试获取整数，如果是浮点数则转换
+                    try {
+                      value.asInt()
+                    } catch (e: Exception) {
+                      value.asDouble().toInt()
+                    }
+                  }
+                  else -> 0
+                }
+              }
+
       val acDouble = DoubleArray(ac.size()) { ac.getDouble(it) }
       val bcDouble = DoubleArray(bc.size()) { bc.getDouble(it) }
       val acOtherDouble = DoubleArray(acOther.size()) { acOther.getDouble(it) }
+
+      Log.d(
+              "Nal2Module",
+              "转换后: centreFreqInt.size=${centreFreqInt.size}, centreFreq=${centreFreqInt.joinToString()}, ac.size=${acDouble.size}, bc.size=${bcDouble.size}, acOther.size=${acOtherDouble.size}"
+      )
 
       val result =
               nal2Manager.getCompressionRatio(
                       crDouble,
                       channels,
-                      centerFreq,
+                      centreFreqInt,
                       acDouble,
                       bcDouble,
                       direction,
@@ -430,35 +465,39 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
 
       val resultArray = Arguments.createArray()
       result.forEach { resultArray.pushDouble(it) }
+
+      Log.d("Nal2Module", "CompressionRatio_NL2成功: CR=${result.joinToString()}")
       promise.resolve(resultArray)
     } catch (e: Exception) {
       Log.e("Nal2Module", "调用compressionRatio失败", e)
+      e.printStackTrace()
       promise.reject("NAL2_ERROR", "调用compressionRatio失败: ${e.message}", e)
     }
   }
 
   @ReactMethod
   fun getMPO(
+          mpo: ReadableArray,
           type: Int,
           ac: ReadableArray,
           bc: ReadableArray,
           channels: Int,
           limiting: Int,
-          acOther: ReadableArray,
-          direction: Int,
-          mic: Int,
-          noOfAids: Int,
           promise: Promise
   ) {
     try {
-      val mpo = DoubleArray(19)
+      val mpoDouble = DoubleArray(mpo.size()) { mpo.getDouble(it) }
       val acDouble = DoubleArray(ac.size()) { ac.getDouble(it) }
       val bcDouble = DoubleArray(bc.size()) { bc.getDouble(it) }
 
-      val result = nal2Manager.getMPO(mpo, limiting, acDouble, bcDouble, channels)
+      Log.d("Nal2Module", "调用getMPO_NL2: type=$type, channels=$channels, limiting=$limiting")
+
+      val result = nal2Manager.getMPO(mpoDouble, type, acDouble, bcDouble, channels, limiting)
 
       val resultArray = Arguments.createArray()
       result.forEach { resultArray.pushDouble(it) }
+
+      Log.d("Nal2Module", "getMPO_NL2成功: MPO=${result.joinToString()}")
       promise.resolve(resultArray)
     } catch (e: Exception) {
       Log.e("Nal2Module", "调用getMPO失败", e)
@@ -1092,8 +1131,8 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       outputData.forEach { cfArray.pushDouble(it) }
       writableMap.putArray("cfArray", cfArray)
 
-      // 获取MPO
-      val mpoData = nal2Manager.getMPO(mpo, limiting, acDouble, bcDouble, channels)
+      // 获取MPO (type=1 for SSPL)
+      val mpoData = nal2Manager.getMPO(mpo, 1, acDouble, bcDouble, channels, limiting)
       val mpoArray = Arguments.createArray()
       mpoData.forEach { mpoArray.pushDouble(it) }
       writableMap.putArray("mpo", mpoArray)

@@ -1,5 +1,5 @@
 {
-  "sequence_num": 123,
+  "sequence_num": 23,
   "function": "setBWC",
   "input_parameters": {
     "channels": 18,

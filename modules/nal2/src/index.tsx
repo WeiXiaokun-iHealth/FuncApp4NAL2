@@ -37,10 +37,9 @@ export function crossOverFrequencies(
 }
 
 export function centerFrequencies(
-  channels: number,
-  cfArray: number[]
+  channels: number
 ): Promise<number[]> {
-  return Nal2.centerFrequencies(channels, Array.from(cfArray));
+  return Nal2.centerFrequencies(channels);
 }
 
 export function compressionThreshold(
@@ -150,9 +149,8 @@ export function setRECDtIndiv9(recdt: number[]): Promise<boolean> {
 }
 
 export function compressionRatio(
-  cr: number[],
   channels: number,
-  centerFreq: number,
+  centreFreq: number[],
   ac: number[],
   bc: number[],
   direction: number,
@@ -162,9 +160,8 @@ export function compressionRatio(
   noOfAids: number
 ): Promise<number[]> {
   return Nal2.compressionRatio(
-    Array.from(cr),
     channels,
-    centerFreq,
+    Array.from(centreFreq),
     Array.from(ac),
     Array.from(bc),
     direction,
@@ -176,26 +173,20 @@ export function compressionRatio(
 }
 
 export function getMPO(
+  mpo: number[],
   type: number,
   ac: number[],
   bc: number[],
   channels: number,
-  limiting: number,
-  acOther: number[],
-  direction: number,
-  mic: number,
-  noOfAids: number
+  limiting: number
 ): Promise<number[]> {
   return Nal2.getMPO(
+    Array.from(mpo),
     type,
     Array.from(ac),
     Array.from(bc),
     channels,
-    limiting,
-    Array.from(acOther),
-    direction,
-    mic,
-    noOfAids
+    limiting
   );
 }
 

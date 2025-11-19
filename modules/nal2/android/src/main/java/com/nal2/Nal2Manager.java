@@ -89,9 +89,10 @@ public class Nal2Manager {
                 mic, calcChArray);
     }
 
-    public double[] getMPO(double[] mpo, int limiting, double[] acDouble, double[] bcDouble, int channels) {
+    public double[] getMPO(double[] mpo, int type, double[] acDouble, double[] bcDouble, int channels, int limiting) {
         try {
-            OutputResult result = NativeManager.getInstance(context).getMPO_NL2(mpo, 0, acDouble, bcDouble, channels,
+            Log.d(TAG, "getMPO_NL2: type=" + type + ", channels=" + channels + ", limiting=" + limiting);
+            OutputResult result = NativeManager.getInstance(context).getMPO_NL2(mpo, type, acDouble, bcDouble, channels,
                     limiting);
             return getOutputData(result, mpo);
         } catch (Exception e) {
@@ -398,17 +399,68 @@ public class Nal2Manager {
         NativeManager.getInstance(context).SetREURindiv9(reur, defValues, dateOfBirth, direction, mic);
     }
 
-    public double[] getCompressionRatio(double[] cr, int channels, int centerFreq, double[] ac, double[] bc,
+    public int[] getCenterFrequencies(int channels, double[] cfArray) {
+        try {
+            int[] centerF = new int[channels];
+            // 调用SDK的CenterFrequencies函数
+            NativeManager.getInstance(context).CenterFrequencies(centerF, cfArray, channels);
+
+            Log.d(TAG, "CenterFrequencies成功: channels=" + channels +
+                    ", centerF length=" + centerF.length);
+            return centerF;
+        } catch (Exception e) {
+            Log.e(TAG, "获取中心频率失败", e);
+            e.printStackTrace();
+            return new int[channels];
+        }
+    }
+
+    public double[] getCompressionRatio(double[] cr, int channels, int[] centreFreq, double[] ac, double[] bc,
             int direction, int mic, int limiting, double[] acOther, int noOfAids) {
         try {
-            // centerFreq 需要转换为 int[] 数组
-            int[] centerFreqArray = new int[] { centerFreq };
-            OutputResult result = NativeManager.getInstance(context).CompressionRatio_NL2(cr, channels, centerFreqArray,
-                    ac,
-                    bc, direction, mic, limiting, acOther, noOfAids);
+            // 详细的参数校验
+            if (centreFreq == null || centreFreq.length != channels) {
+                Log.e(TAG, "Invalid centreFreq array: expected " + channels + " elements, got " +
+                        (centreFreq == null ? "null" : centreFreq.length));
+                throw new IllegalArgumentException("centreFreq array size must equal channels (" + channels + ")");
+            }
+
+            if (ac == null || ac.length != 9) {
+                Log.e(TAG, "Invalid AC array: expected 9 elements, got " +
+                        (ac == null ? "null" : ac.length));
+                throw new IllegalArgumentException("AC array must have 9 elements (standard frequencies)");
+            }
+
+            if (bc == null || bc.length != 9) {
+                Log.e(TAG, "Invalid BC array: expected 9 elements, got " +
+                        (bc == null ? "null" : bc.length));
+                throw new IllegalArgumentException("BC array must have 9 elements (standard frequencies)");
+            }
+
+            if (acOther == null || acOther.length != 9) {
+                Log.e(TAG, "Invalid ACother array: expected 9 elements, got " +
+                        (acOther == null ? "null" : acOther.length));
+                throw new IllegalArgumentException("ACother array must have 9 elements (standard frequencies)");
+            }
+
+            // 打印调试信息
+            Log.d(TAG, "CompressionRatio_NL2: channels=" + channels +
+                    ", centreFreq length=" + centreFreq.length +
+                    ", AC length=" + ac.length +
+                    ", BC length=" + bc.length +
+                    ", ACother length=" + acOther.length +
+                    ", CR length=" + cr.length);
+
+            // centreFreq本身就是int[]数组，直接传递
+            OutputResult result = NativeManager.getInstance(context).CompressionRatio_NL2(cr, channels, centreFreq,
+                    ac, bc, direction, mic, limiting, acOther, noOfAids);
             return getOutputData(result, cr);
+        } catch (IllegalArgumentException e) {
+            Log.e(TAG, "参数验证失败: " + e.getMessage(), e);
+            throw e; // 重新抛出，让上层处理
         } catch (Exception e) {
             Log.e(TAG, "获取压缩比失败", e);
+            e.printStackTrace(); // 打印完整堆栈
             return cr;
         }
     }

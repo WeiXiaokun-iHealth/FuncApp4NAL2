@@ -105,7 +105,7 @@ class NAL2Bridge {
 
         case 'CenterFrequencies':
           result = await this.handleCenterFrequencies(input_parameters);
-          outputParameters = { centerFreq: result };
+          outputParameters = { centreFreq: result };
           break;
 
         case 'CompressionThreshold_NL2':
@@ -360,11 +360,10 @@ class NAL2Bridge {
   }
 
   static async handleCenterFrequencies(params) {
-    DataParser.validateParameters(params, ['channels', 'CFArray']);
-    return await nal2Module.centerFrequencies(
-      params.channels,
-      params.CFArray
-    );
+    // CFArray是SDK内部输出参数，只需要channels作为输入
+    // SDK内部使用CrossOverFrequencies_NL2保存的数据
+    DataParser.validateParameters(params, ['channels']);
+    return await nal2Module.centerFrequencies(params.channels);
   }
 
   static async handleCompressionThreshold(params) {
@@ -489,11 +488,12 @@ class NAL2Bridge {
   }
 
   static async handleCompressionRatio(params) {
-    DataParser.validateParameters(params, ['CR', 'channels', 'centerFreq', 'AC', 'BC', 'direction', 'mic', 'limiting', 'ACother', 'noOfAids']);
+    DataParser.validateParameters(params, ['channels', 'centreFreq', 'AC', 'BC', 'direction', 'mic', 'limiting', 'ACother', 'noOfAids']);
+    console.log('[NAL2Bridge] CompressionRatio - centreFreq before call:', params.centreFreq, 'length:', params.centreFreq.length);
+    console.log('[NAL2Bridge] CompressionRatio - AC:', params.AC, 'length:', params.AC.length);
     return await nal2Module.compressionRatio(
-      params.CR,
       params.channels,
-      params.centerFreq,
+      params.centreFreq,
       params.AC,
       params.BC,
       params.direction,
@@ -505,17 +505,19 @@ class NAL2Bridge {
   }
 
   static async handleGetMPO(params) {
-    DataParser.validateParameters(params, ['type', 'AC', 'BC', 'channels', 'limiting', 'ACother', 'direction', 'mic', 'noOfAids']);
+    // getMPO_NL2 SDK只需要6个参数：MPO[], type, AC[], BC[], channels, limiting
+    DataParser.validateParameters(params, ['type', 'AC', 'BC', 'channels', 'limiting']);
+    
+    // 创建19个元素的MPO输出数组（third-octave frequencies）
+    const MPO = new Array(19).fill(0.0);
+    
     return await nal2Module.getMPO(
+      MPO,
       params.type,
       params.AC,
       params.BC,
       params.channels,
-      params.limiting,
-      params.ACother,
-      params.direction,
-      params.mic,
-      params.noOfAids
+      params.limiting
     );
   }
 

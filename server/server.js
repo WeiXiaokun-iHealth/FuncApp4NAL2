@@ -40,6 +40,8 @@ const clients = {
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
+// 提供input_json_data目录的静态文件访问
+app.use('/input_json_data', express.static(path.join(__dirname, '../input_json_data')));
 
 // 初始化数据文件
 const initDataFile = () => {
