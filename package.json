@@ -15,6 +15,7 @@
     "test:watch": "nodemon tests/nal2_automated_tests.js"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@types/react": "~18.2.45",
     "expo": "~50.0.14",
     "expo-dev-client": "^3.3.11",
