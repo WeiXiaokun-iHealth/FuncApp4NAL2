@@ -476,24 +476,16 @@ public class Nal2Manager {
         }
     }
 
-    public TccCouplerGainResult getTccCouplerGain(double[] gain, double[] ac, double[] bc, double speechLevel,
+    public TccCouplerGainResult getTccCouplerGain(double[] gain, double[] ac, double[] bc, double L,
             int limiting,
             int channels, int direction, int mic, int target, int aidType, double[] acOther, int noOfAids, int tubing,
             int vent, int RECDmeasType, int[] lineType) {
         try {
-            // 需要添加 calcCh 参数作为最后一个参数
-            int[] calcCh = new int[channels];
-            for (int i = 0; i < channels; i++) {
-                calcCh[i] = 1;
-            }
-            OutputResult result = NativeManager.getInstance(context).TccCouplerGain_NL2(gain, ac, bc, speechLevel,
+            // lineType是输出参数，SDK会填充它
+            OutputResult result = NativeManager.getInstance(context).TccCouplerGain_NL2(gain, ac, bc, L,
                     limiting, channels, direction, mic, target, aidType, acOther, noOfAids, tubing, vent, RECDmeasType,
-                    calcCh);
+                    lineType);
             double[] tccGain = getOutputData(result, gain);
-            // lineType通过calcCh返回，这里简单填充
-            for (int i = 0; i < lineType.length && i < calcCh.length; i++) {
-                lineType[i] = calcCh[i];
-            }
             return new TccCouplerGainResult(tccGain, lineType);
         } catch (Exception e) {
             Log.e(TAG, "获取TCC增益失败", e);

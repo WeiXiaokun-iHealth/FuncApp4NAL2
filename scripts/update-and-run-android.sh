@@ -51,8 +51,16 @@ cd android
 cd ..
 echo -e "${GREEN}✓ Android 缓存清理完成${NC}"
 
-# 5. 重新运行 Android
-echo -e "\n${GREEN}[5/5]${NC} 重新编译并运行 Android 应用..."
+# 5. 卸载旧版本应用（如果存在）
+echo -e "\n${GREEN}[5/6]${NC} 卸载旧版本应用..."
+if adb uninstall com.funcapp.nal2 2>/dev/null; then
+    echo -e "${GREEN}✓ 旧版本应用已卸载${NC}"
+else
+    echo -e "${BLUE}ℹ 未发现旧版本应用（可能未安装）${NC}"
+fi
+
+# 6. 重新运行 Android
+echo -e "\n${GREEN}[6/6]${NC} 重新编译并运行 Android 应用..."
 echo -e "${BLUE}这可能需要几分钟时间...${NC}\n"
 
 if yarn android; then

@@ -42,15 +42,118 @@ function log(message, color = colors.reset) {
 }
 
 /**
- * 获取所有JSON测试文件
+ * 函数依赖关系映射
+ * 格式: { 'functionName': ['requiredFunction1', 'requiredFunction2', ...] }
+ */
+const functionDependencies = {
+  // CompressionRatio_NL2 需要: 23, 21, 34, 35, 36, 37, 38
+  'CompressionRatio_NL2': [
+    'SetAdultChild',
+    'SetExperience',
+    'SetCompSpeed',
+    'SetTonalLanguage',
+    'SetGender',
+    'setBWC',
+    'CompressionThreshold_NL2'
+  ],
+  // setBWC 需要先执行 CrossOverFrequencies_NL2
+  'setBWC': ['CrossOverFrequencies_NL2'],
+  // CompressionThreshold_NL2 需要: 16, 23, 43 或 44, 17 或 18, 21, 34, 35, 36, 37, 38
+  'CompressionThreshold_NL2': [
+    'SetAdultChild',
+    'SetExperience',
+    'SetCompSpeed',
+    'SetTonalLanguage',
+    'SetGender'
+  ]
+};
+
+/**
+ * 从文件名提取函数名
+ */
+function extractFunctionName(fileName) {
+  // 例如: "22_CompressionRatio_NL2_data.json" -> "CompressionRatio_NL2"
+  const match = fileName.match(/\d+_(.+)_data\.json$/);
+  return match ? match[1] : null;
+}
+
+/**
+ * 按依赖关系排序测试文件
+ */
+function sortTestFilesByDependencies(files) {
+  const sorted = [];
+  const added = new Set();
+  const fileMap = new Map();
+  
+  // 创建文件名到路径的映射
+  files.forEach(filePath => {
+    const fileName = path.basename(filePath);
+    const funcName = extractFunctionName(fileName);
+    if (funcName) {
+      fileMap.set(funcName, filePath);
+    }
+  });
+  
+  // 递归添加函数及其依赖
+  function addWithDependencies(filePath) {
+    const fileName = path.basename(filePath);
+    const funcName = extractFunctionName(fileName);
+    
+    // 如果已添加，跳过
+    if (added.has(fileName)) {
+      return;
+    }
+    
+    // 先添加依赖
+    const deps = functionDependencies[funcName] || [];
+    for (const depName of deps) {
+      const depFile = fileMap.get(depName);
+      if (depFile) {
+        addWithDependencies(depFile);
+      }
+    }
+    
+    // 然后添加当前文件
+    sorted.push(filePath);
+    added.add(fileName);
+  }
+  
+  // 处理所有文件
+  files.forEach(filePath => {
+    addWithDependencies(filePath);
+  });
+  
+  return sorted;
+}
+
+/**
+ * 获取所有JSON测试文件（按依赖关系排序）
  */
 function getTestFiles() {
   try {
     const files = fs.readdirSync(TEST_CONFIG.jsonDataDir);
-    return files
+    const testFiles = files
       .filter(file => file.endsWith('_data.json'))
       .map(file => path.join(TEST_CONFIG.jsonDataDir, file))
-      .sort();
+      .sort(); // 先按字母排序作为基础
+    
+    // 按依赖关系重新排序
+    const sortedFiles = sortTestFilesByDependencies(testFiles);
+    
+    log(`\n📋 测试执行顺序（按依赖关系）:`, colors.cyan);
+    sortedFiles.forEach((file, index) => {
+      const fileName = path.basename(file);
+      const funcName = extractFunctionName(fileName);
+      const deps = functionDependencies[funcName];
+      if (deps && deps.length > 0) {
+        log(`  ${index + 1}. ${funcName} (依赖: ${deps.join(', ')})`, colors.yellow);
+      } else {
+        log(`  ${index + 1}. ${funcName}`, colors.blue);
+      }
+    });
+    log('');
+    
+    return sortedFiles;
   } catch (error) {
     log(`❌ 无法读取测试文件目录: ${error.message}`, colors.red);
     return [];

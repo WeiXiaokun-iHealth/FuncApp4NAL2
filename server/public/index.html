@@ -371,6 +371,19 @@
 
             <div class="status-message" id="statusMessage"></div>
 
+            <!-- App服务器配置 -->
+            <div class="form-group">
+                <label for="appServerUrl">App服务器地址</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="appServerUrl"
+                        style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-family: 'Courier New', monospace;"
+                        placeholder="http://192.168.1.100:8080">
+                    <button class="btn-primary" onclick="testAppConnection()" style="white-space: nowrap;">🔍
+                        测试连接</button>
+                    <button class="btn-success" onclick="saveAppServerUrl()" style="white-space: nowrap;">💾 保存</button>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label for="inputText">Input</label>
                 <textarea id="inputText" placeholder="输入参数（JSON格式）..."></textarea>
@@ -482,76 +495,74 @@
 
     <script>
         let currentHistoryId = null;
-        let ws = null;
-        let wsConnected = false;
+        let appServerUrl = localStorage.getItem('appServerUrl') || 'http://192.168.1.100:8080';
 
-        // 初始化WebSocket连接
-        function initWebSocket() {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}`;
-
-            ws = new WebSocket(wsUrl);
-
-            ws.onopen = () => {
-                console.log('WebSocket已连接');
-                wsConnected = true;
-                // 注册为Web客户端
-                ws.send(JSON.stringify({ type: 'register', client: 'web' }));
-            };
-
-            ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    console.log('收到WebSocket消息:', data);
-
-                    if (data.type === 'registered') {
-                        showMessage('WebSocket已连接', 'success');
-                    } else if (data.type === 'receive_output') {
-                        // 接收到App处理的output
-                        document.getElementById('outputText').value = data.output;
-                        showMessage('已收到App处理结果！', 'success');
-
-                        // 自动保存到历史记录
-                        autoSaveToHistory();
-                    } else if (data.type === 'error') {
-                        showMessage(data.message, 'error');
-                    }
-                } catch (error) {
-                    console.error('解析WebSocket消息错误:', error);
-                }
-            };
-
-            ws.onclose = () => {
-                console.log('WebSocket已断开');
-                wsConnected = false;
-                // 3秒后重连
-                setTimeout(initWebSocket, 3000);
-            };
-
-            ws.onerror = (error) => {
-                console.error('WebSocket错误:', error);
-            };
+        // 保存App服务器地址
+        function saveAppServerUrl() {
+            const url = document.getElementById('appServerUrl').value.trim();
+            if (!url) {
+                showMessage('请输入App服务器地址', 'error');
+                return;
+            }
+            localStorage.setItem('appServerUrl', url);
+            appServerUrl = url;
+            showMessage('服务器地址已保存！', 'success');
         }
 
-        // 发送input给App处理（WebSocket方式）
-        function sendToApp() {
-            if (!wsConnected) {
-                showMessage('WebSocket未连接', 'error');
+        // 测试App连接
+        async function testAppConnection() {
+            const url = document.getElementById('appServerUrl').value.trim();
+            if (!url) {
+                showMessage('请输入App服务器地址', 'error');
                 return;
             }
 
-            const input = document.getElementById('inputText').value;
+            try {
+                const response = await fetch(`${url}/health`);
+                const data = await response.json();
+
+                // 连接成功后自动保存地址
+                localStorage.setItem('appServerUrl', url);
+                appServerUrl = url;
+
+                showMessage(`✅ 连接成功！服务器: ${data.server || 'Unknown'} - 地址已保存`, 'success');
+            } catch (error) {
+                showMessage(`❌ 连接失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 发送input给App处理（HTTP方式）
+        async function sendToApp() {
+            const input = document.getElementById('inputText').value.trim();
             if (!input) {
                 showMessage('请先输入Input参数', 'error');
                 return;
             }
 
-            ws.send(JSON.stringify({
-                type: 'send_to_app',
-                input: input
-            }));
+            try {
+                const inputData = JSON.parse(input);
 
-            showMessage('已发送给App处理...', 'success');
+                showMessage('正在发送到App处理...', 'success');
+
+                const response = await fetch(`${appServerUrl}/api/nal2/process`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(inputData)
+                });
+
+                const result = await response.json();
+
+                // 显示结果到output
+                document.getElementById('outputText').value = JSON.stringify(result, null, 2);
+                showMessage('✅ 已收到App处理结果！', 'success');
+
+                // 自动保存到历史记录
+                autoSaveToHistory();
+
+            } catch (error) {
+                showMessage(`❌ 处理失败: ${error.message}`, 'error');
+                console.error('发送失败:', error);
+            }
         }
 
         // 显示状态消息
@@ -838,10 +849,10 @@
             }
         }
 
-        
+
         // 定义9步初始化顺序
         const INIT_SEQUENCE = [34, 35, 36, 37, 38, 19, 23, 21, 2];
-        
+
         // 定义完整测试顺序（按依赖关系）
         const TEST_EXECUTION_ORDER = [
             1, 34, 35, 36, 37, 38,
@@ -858,12 +869,8 @@
 
 
 
-        // 一键测试46个函数
+        // 一键测试46个函数（HTTP方式）
         async function runAllTests() {
-            if (!wsConnected) {
-                showMessage('WebSocket未连接，无法运行测试', 'error');
-                return;
-            }
 
             // 显示测试面板
             document.getElementById('testPanel').style.display = 'block';
@@ -901,15 +908,15 @@
                 // 步骤1: 执行9步初始化
                 showMessage('开始9步初始化流程...', 'success');
                 console.log('开始9步初始化流程');
-                
+
                 for (let initIdx = 0; initIdx < INIT_SEQUENCE.length; initIdx++) {
                     const seqNum = INIT_SEQUENCE[initIdx];
                     const test = testMap[seqNum];
                     if (!test) continue;
-                    
+
                     const testIdx = tests.findIndex(t => t.sequence_num === seqNum);
                     const testId = `test-${testIdx}`;
-                    
+
                     // 添加测试项
                     const testItem = document.createElement('div');
                     testItem.id = testId;
@@ -922,26 +929,26 @@
                         <div id="${testId}-details" style="font-size: 12px; color: #666; margin-top: 4px;"></div>
                     `;
                     document.getElementById('testResults').appendChild(testItem);
-                    
-                    // 运行初始化测试
+
+                    // 运行初始化测试（发送到App）
                     const startTime = Date.now();
                     try {
-                        const testResult = await fetch('/api/nal2/process', {
+                        const testResult = await fetch(`${appServerUrl}/api/nal2/process`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(test)
                         });
-                        
+
                         const result = await testResult.json();
                         const duration = Date.now() - startTime;
                         const success = result.return === 0 && !result.output_parameters?.error;
-                        
+
                         if (success) {
                             passed++;
                             // 缓存初始化结果
                             initResults[test.sequence_num] = result.output_parameters;
                             console.log(`缓存初始化结果 [${test.sequence_num}]:`, result.output_parameters);
-                            
+
                             testItem.style.borderColor = '#34C759';
                             testItem.style.backgroundColor = '#F1F9F1';
                             document.getElementById(`${testId}-status`).textContent = '✅ 初始化完成';
@@ -958,13 +965,13 @@
                                 </div>
                             `;
                         }
-                        
+
                         document.getElementById(`${testId}-details`).innerHTML += `<div>耗时: ${duration}ms</div>`;
-                        
+
                         const testData = { ...test, result, success, duration };
                         results.push(testData);
                         testItem.onclick = () => showTestDetail(testData);
-                        
+
                     } catch (error) {
                         failed++;
                         testItem.style.borderColor = '#FF3B30';
@@ -977,20 +984,20 @@
                             </div>
                         `;
                     }
-                    
+
                     document.getElementById('passedTests').textContent = passed;
                     document.getElementById('failedTests').textContent = failed;
                     document.getElementById('testProgress').textContent = Math.round((initIdx + 1) / tests.length * 100) + '%';
                     document.getElementById('testResults').scrollTop = document.getElementById('testResults').scrollHeight;
                 }
-                
+
                 console.log('9步初始化完成');
                 showMessage('9步初始化完成，开始功能测试...', 'success');
 
                 // 逐个运行测试
                 for (let i = 0; i < tests.length; i++) {
                     const test = tests[i];
-                    
+
                     // 跳过已在初始化中执行的测试
                     if (INIT_SEQUENCE.includes(test.sequence_num)) {
                         continue;
@@ -1031,11 +1038,11 @@
                         };
                         console.log('CompressionRatio_NL2: 使用CenterFrequencies的结果', initResults[20].centreFreq);
                     }
-                    
-                    // 运行单个测试
+
+                    // 运行单个测试（发送到App）
                     const startTime = Date.now();
                     try {
-                        const testResult = await fetch('/api/nal2/process', {
+                        const testResult = await fetch(`${appServerUrl}/api/nal2/process`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(test)
@@ -1117,7 +1124,8 @@
 
         // 页面加载时初始化
         window.onload = () => {
-            initWebSocket();
+            // 加载保存的服务器地址
+            document.getElementById('appServerUrl').value = appServerUrl;
             loadCurrentParams();
             loadHistory();
         };

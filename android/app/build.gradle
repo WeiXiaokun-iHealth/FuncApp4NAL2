@@ -76,6 +76,8 @@ android {
 }
 
 dependencies {
+    // WebSocket服务器依赖
+    implementation 'org.java-websocket:Java-WebSocket:1.5.3'
     implementation("com.facebook.react:react-android")
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";

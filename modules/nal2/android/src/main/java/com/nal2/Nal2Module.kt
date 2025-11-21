@@ -7,6 +7,8 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableArray
+import org.json.JSONArray
+import org.json.JSONObject
 
 class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
 
@@ -1357,5 +1359,626 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       Log.e("Nal2Module", "调用getSII失败", e)
       promise.reject("NAL2_ERROR", "调用getSII失败: ${e.message}", e)
     }
+  }
+
+  /** 同步处理HTTP请求的NAL2函数调用 接收JSON字符串，解析后调用相应的NAL2函数，返回JSON结果 */
+  @ReactMethod
+  fun processRequestSync(requestJson: String, promise: Promise) {
+    try {
+      Log.d("Nal2Module", "processRequestSync: 收到请求，长度=${requestJson.length}")
+
+      val request = JSONObject(requestJson)
+      val sequenceNum = request.optInt("sequence_num", 0)
+      val functionName = request.getString("function")
+      val inputParams = request.getJSONObject("input_parameters")
+
+      Log.d("Nal2Module", "processRequestSync: 函数=$functionName, 序号=$sequenceNum")
+
+      // 构建响应
+      val response = JSONObject()
+      response.put("sequence_num", sequenceNum)
+      response.put("function", functionName)
+      response.put("return", 0)
+
+      // 处理函数并获取输出参数
+      val outputParams = processFunction(functionName, inputParams)
+      response.put("output_parameters", outputParams)
+
+      Log.d("Nal2Module", "processRequestSync: 处理完成")
+      promise.resolve(response.toString())
+    } catch (e: Exception) {
+      Log.e("Nal2Module", "processRequestSync失败", e)
+
+      // 返回错误响应
+      try {
+        val errorResponse = JSONObject()
+        errorResponse.put("sequence_num", 0)
+        errorResponse.put("function", "unknown")
+        errorResponse.put("return", -1)
+
+        val errorParams = JSONObject()
+        errorParams.put("error", e.message ?: "Unknown error")
+        errorResponse.put("output_parameters", errorParams)
+
+        promise.resolve(errorResponse.toString())
+      } catch (e2: Exception) {
+        promise.reject("PROCESS_ERROR", e.message, e)
+      }
+    }
+  }
+
+  /** 根据函数名处理请求并返回输出参数 */
+  private fun processFunction(functionName: String, params: JSONObject): JSONObject {
+    val output = JSONObject()
+
+    when (functionName) {
+      "dllVersion" -> {
+        val version = nal2Manager.getDllVersion()
+        output.put("major", version[0])
+        output.put("minor", version[1])
+      }
+      "CrossOverFrequencies_NL2" -> {
+        val channels = params.getInt("channels")
+        val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
+        val bc = jsonArrayToDoubleArray(params.getJSONArray("BC"))
+
+        val cfArr = DoubleArray(19)
+        val freqInCh = IntArray(19)
+        val result = nal2Manager.getCrossOverFrequencies(cfArr, channels, ac, bc, freqInCh)
+        output.put("crossOverFreq", doubleArrayToJSONArray(result))
+      }
+      "CenterFrequencies" -> {
+        val channels = params.getInt("channels")
+        val cfArrayDouble = DoubleArray(19)
+        val result = nal2Manager.getCenterFrequencies(channels, cfArrayDouble)
+        output.put("centreFreq", intArrayToJSONArray(result))
+      }
+      "CompressionThreshold_NL2" -> {
+        val ct = DoubleArray(19)
+        nal2Manager.setCompressionThreshold(
+                ct,
+                0,
+                1,
+                params.getInt("WBCT"),
+                params.getInt("aidType"),
+                params.getInt("direction"),
+                params.getInt("mic"),
+                intArrayOf(1)
+        )
+        output.put("CT", doubleArrayToJSONArray(ct))
+      }
+      "setBWC" -> {
+        val channels = params.getInt("channels")
+        val crossOver = jsonArrayToDoubleArray(params.getJSONArray("crossOver"))
+        nal2Manager.setBWC(channels, crossOver)
+        output.put("success", true)
+      }
+      "SetAdultChild" -> {
+        nal2Manager.setAdultChild(params.getInt("adultChild"), params.getInt("dateOfBirth"))
+        output.put("success", true)
+      }
+      "SetExperience" -> {
+        nal2Manager.setExperience(params.getInt("experience"))
+        output.put("success", true)
+      }
+      "SetCompSpeed" -> {
+        nal2Manager.setCompSpeed(params.getInt("compSpeed"))
+        output.put("success", true)
+      }
+      "SetTonalLanguage" -> {
+        nal2Manager.setTonalLanguage(params.getInt("tonal"))
+        output.put("success", true)
+      }
+      "SetGender" -> {
+        nal2Manager.setGender(params.getInt("gender"))
+        output.put("success", true)
+      }
+      "GetRECDh_indiv_NL2" -> {
+        val result =
+                nal2Manager.getRECDhIndiv(
+                        params.getInt("RECDmeasType"),
+                        params.getInt("dateOfBirth"),
+                        params.getInt("aidType"),
+                        params.getInt("tubing"),
+                        params.getInt("coupler"),
+                        params.getInt("fittingDepth")
+                )
+        output.put("RECDh", doubleArrayToJSONArray(result))
+      }
+      "GetRECDh_indiv9_NL2" -> {
+        val result =
+                nal2Manager.getRECDhIndiv9(
+                        params.getInt("RECDmeasType"),
+                        params.getInt("dateOfBirth"),
+                        params.getInt("aidType"),
+                        params.getInt("tubing"),
+                        params.getInt("coupler"),
+                        params.getInt("fittingDepth")
+                )
+        output.put("RECDh", doubleArrayToJSONArray(result))
+      }
+      "GetRECDt_indiv_NL2" -> {
+        val result =
+                nal2Manager.getRECDtIndiv(
+                        params.getInt("RECDmeasType"),
+                        params.getInt("dateOfBirth"),
+                        params.getInt("aidType"),
+                        params.getInt("tubing"),
+                        params.getInt("vent"),
+                        params.getInt("earpiece"),
+                        params.getInt("coupler"),
+                        params.getInt("fittingDepth")
+                )
+        output.put("RECDt", doubleArrayToJSONArray(result))
+      }
+      "GetRECDt_indiv9_NL2" -> {
+        val result =
+                nal2Manager.getRECDtIndiv9(
+                        params.getInt("RECDmeasType"),
+                        params.getInt("dateOfBirth"),
+                        params.getInt("aidType"),
+                        params.getInt("tubing"),
+                        params.getInt("vent"),
+                        params.getInt("earpiece"),
+                        params.getInt("coupler"),
+                        params.getInt("fittingDepth")
+                )
+        output.put("RECDt", doubleArrayToJSONArray(result))
+      }
+      "SetRECDh_indiv_NL2" -> {
+        nal2Manager.setRECDhIndiv(jsonArrayToDoubleArray(params.getJSONArray("RECDh")))
+        output.put("success", true)
+      }
+      "SetRECDh_indiv9_NL2" -> {
+        nal2Manager.setRECDhIndiv9(jsonArrayToDoubleArray(params.getJSONArray("RECDh")))
+        output.put("success", true)
+      }
+      "SetRECDt_indiv_NL2" -> {
+        nal2Manager.setRECDtIndiv(jsonArrayToDoubleArray(params.getJSONArray("RECDt")))
+        output.put("success", true)
+      }
+      "SetRECDt_indiv9_NL2" -> {
+        nal2Manager.setRECDtIndiv9(jsonArrayToDoubleArray(params.getJSONArray("RECDt")))
+        output.put("success", true)
+      }
+      "CompressionRatio_NL2" -> {
+        val cr = DoubleArray(19)
+        val channels = params.getInt("channels")
+        val centreFreq = jsonArrayToIntArray(params.getJSONArray("centreFreq"))
+        val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
+        val bc = jsonArrayToDoubleArray(params.getJSONArray("BC"))
+        val acOther = jsonArrayToDoubleArray(params.getJSONArray("ACother"))
+
+        val result =
+                nal2Manager.getCompressionRatio(
+                        cr,
+                        channels,
+                        centreFreq,
+                        ac,
+                        bc,
+                        params.getInt("direction"),
+                        params.getInt("mic"),
+                        params.getInt("limiting"),
+                        acOther,
+                        params.getInt("noOfAids")
+                )
+        output.put("CR", doubleArrayToJSONArray(result))
+      }
+      "getMPO_NL2" -> {
+        val mpo = DoubleArray(19)
+        val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
+        val bc = jsonArrayToDoubleArray(params.getJSONArray("BC"))
+
+        val result =
+                nal2Manager.getMPO(
+                        mpo,
+                        params.getInt("type"),
+                        ac,
+                        bc,
+                        params.getInt("channels"),
+                        params.getInt("limiting")
+                )
+        output.put("MPO", doubleArrayToJSONArray(result))
+      }
+      "RealEarInsertionGain_NL2" -> {
+        val reig = DoubleArray(19)
+        val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
+        val bc = jsonArrayToDoubleArray(params.getJSONArray("BC"))
+        val acOther = jsonArrayToDoubleArray(params.getJSONArray("ACother"))
+
+        val result =
+                nal2Manager.getRealEarInsertionGain(
+                        reig,
+                        ac,
+                        bc,
+                        params.getDouble("L"),
+                        params.getInt("limiting"),
+                        params.getInt("channels"),
+                        params.getInt("direction"),
+                        params.getInt("mic"),
+                        acOther,
+                        params.getInt("noOfAids")
+                )
+        output.put("REIG", doubleArrayToJSONArray(result))
+      }
+      "RealEarAidedGain_NL2" -> {
+        val data = DoubleArray(19)
+        val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
+        val bc = jsonArrayToDoubleArray(params.getJSONArray("BC"))
+
+        val result =
+                nal2Manager.getRealEarAidedGain(
+                        data,
+                        ac,
+                        bc,
+                        params.getDouble("L"),
+                        params.getInt("limiting"),
+                        params.getInt("channels"),
+                        params.getInt("direction"),
+                        params.getInt("mic"),
+                        params.getInt("noOfAids")
+                )
+        output.put("REAG", doubleArrayToJSONArray(result))
+      }
+      "TccCouplerGain_NL2" -> {
+        val gain = DoubleArray(19)
+        val lineType = IntArray(19)
+        val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
+        val bc = jsonArrayToDoubleArray(params.getJSONArray("BC"))
+        val acOther = jsonArrayToDoubleArray(params.getJSONArray("ACother"))
+
+        val result =
+                nal2Manager.getTccCouplerGain(
+                        gain,
+                        ac,
+                        bc,
+                        params.getDouble("L"),
+                        params.getInt("limiting"),
+                        params.getInt("channels"),
+                        params.getInt("direction"),
+                        params.getInt("mic"),
+                        params.getInt("target"),
+                        params.getInt("aidType"),
+                        acOther,
+                        params.getInt("noOfAids"),
+                        params.getInt("tubing"),
+                        params.getInt("vent"),
+                        params.getInt("RECDmeasType"),
+                        lineType
+                )
+        output.put("TccGain", doubleArrayToJSONArray(result.TccGain))
+        output.put("lineType", intArrayToJSONArray(result.lineType))
+      }
+      "EarSimulatorGain_NL2" -> {
+        val gain = DoubleArray(19)
+        val lineType = IntArray(19)
+        val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
+        val bc = jsonArrayToDoubleArray(params.getJSONArray("BC"))
+        val acOther = jsonArrayToDoubleArray(params.getJSONArray("ACother"))
+
+        val result =
+                nal2Manager.getEarSimulatorGain(
+                        gain,
+                        ac,
+                        bc,
+                        params.getDouble("L"),
+                        params.getInt("direction"),
+                        params.getInt("mic"),
+                        params.getInt("limiting"),
+                        params.getInt("channels"),
+                        params.getInt("target"),
+                        params.getInt("aidType"),
+                        acOther,
+                        params.getInt("noOfAids"),
+                        params.getInt("tubing"),
+                        params.getInt("vent"),
+                        params.getInt("RECDmeasType"),
+                        lineType
+                )
+        output.put("ESG", doubleArrayToJSONArray(result.ESG))
+        output.put("lineType", intArrayToJSONArray(result.lineType))
+      }
+      "RealEarInputOutputCurve_NL2" -> {
+        val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
+        val bc = jsonArrayToDoubleArray(params.getJSONArray("BC"))
+        val acOther = jsonArrayToDoubleArray(params.getJSONArray("ACother"))
+
+        val result =
+                nal2Manager.getRealEarInputOutputCurve(
+                        ac,
+                        bc,
+                        params.getInt("graphFreq"),
+                        params.getInt("startLevel"),
+                        params.getInt("finishLevel"),
+                        params.getInt("limiting"),
+                        params.getInt("channels"),
+                        params.getInt("direction"),
+                        params.getInt("mic"),
+                        params.getInt("target"),
+                        acOther,
+                        params.getInt("noOfAids")
+                )
+        output.put("REIO", doubleArrayToJSONArray(result.IO))
+        output.put("REIOunl", doubleArrayToJSONArray(result.IOunl))
+      }
+      "TccInputOutputCurve_NL2" -> {
+        val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
+        val bc = jsonArrayToDoubleArray(params.getJSONArray("BC"))
+        val acOther = jsonArrayToDoubleArray(params.getJSONArray("ACother"))
+
+        val result =
+                nal2Manager.getTccInputOutputCurve(
+                        ac,
+                        bc,
+                        params.getInt("graphFreq"),
+                        params.getInt("startLevel"),
+                        params.getInt("finishLevel"),
+                        params.getInt("limiting"),
+                        params.getInt("channels"),
+                        params.getInt("direction"),
+                        params.getInt("mic"),
+                        params.getInt("target"),
+                        params.getInt("aidType"),
+                        acOther,
+                        params.getInt("noOfAids"),
+                        params.getInt("tubing"),
+                        params.getInt("vent"),
+                        params.getInt("RECDmeasType")
+                )
+        output.put("TccIO", doubleArrayToJSONArray(result.TccIO))
+        output.put("TccIOunl", doubleArrayToJSONArray(result.TccIOunl))
+        output.put("lineType", intArrayToJSONArray(result.lineType))
+      }
+      "EarSimulatorInputOutputCurve_NL2" -> {
+        val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
+        val bc = jsonArrayToDoubleArray(params.getJSONArray("BC"))
+        val acOther = jsonArrayToDoubleArray(params.getJSONArray("ACother"))
+
+        val result =
+                nal2Manager.getEarSimulatorInputOutputCurve(
+                        ac,
+                        bc,
+                        params.getInt("graphFreq"),
+                        params.getInt("startLevel"),
+                        params.getInt("finishLevel"),
+                        params.getInt("limiting"),
+                        params.getInt("channels"),
+                        params.getInt("direction"),
+                        params.getInt("mic"),
+                        params.getInt("target"),
+                        params.getInt("aidType"),
+                        acOther,
+                        params.getInt("noOfAids"),
+                        params.getInt("tubing"),
+                        params.getInt("vent"),
+                        params.getInt("RECDmeasType")
+                )
+        output.put("ESIO", doubleArrayToJSONArray(result.ESIO))
+        output.put("ESIOunl", doubleArrayToJSONArray(result.ESIOunl))
+        output.put("lineType", intArrayToJSONArray(result.lineType))
+      }
+      "Speech_o_Gram_NL2" -> {
+        val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
+        val bc = jsonArrayToDoubleArray(params.getJSONArray("BC"))
+        val acOther = jsonArrayToDoubleArray(params.getJSONArray("ACother"))
+
+        val result =
+                nal2Manager.getSpeechOGram(
+                        ac,
+                        bc,
+                        params.getDouble("L"),
+                        params.getInt("limiting"),
+                        params.getInt("channels"),
+                        params.getInt("direction"),
+                        params.getInt("mic"),
+                        acOther,
+                        params.getInt("noOfAids")
+                )
+        output.put("Speech_rms", doubleArrayToJSONArray(result.Speech_rms))
+        output.put("Speech_max", doubleArrayToJSONArray(result.Speech_max))
+        output.put("Speech_min", doubleArrayToJSONArray(result.Speech_min))
+        output.put("Speech_thresh", doubleArrayToJSONArray(result.Speech_thresh))
+      }
+      "AidedThreshold_NL2" -> {
+        val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
+        val bc = jsonArrayToDoubleArray(params.getJSONArray("BC"))
+        val ct = jsonArrayToDoubleArray(params.getJSONArray("CT"))
+        val acOther = jsonArrayToDoubleArray(params.getJSONArray("ACother"))
+
+        val result =
+                nal2Manager.getAidedThreshold(
+                        ac,
+                        bc,
+                        ct,
+                        params.getInt("dbOption"),
+                        acOther,
+                        params.getInt("noOfAids"),
+                        params.getInt("limiting"),
+                        params.getInt("channels"),
+                        params.getInt("direction"),
+                        params.getInt("mic")
+                )
+        output.put("AT", doubleArrayToJSONArray(result))
+      }
+      "GetREDDindiv" -> {
+        val result = nal2Manager.getREDDindiv(params.getInt("defValues"))
+        output.put("REDD", doubleArrayToJSONArray(result))
+      }
+      "GetREDDindiv9" -> {
+        val result = nal2Manager.getREDDindiv9(params.getInt("defValues"))
+        output.put("REDD", doubleArrayToJSONArray(result))
+      }
+      "GetREURindiv" -> {
+        val result =
+                nal2Manager.getREURindiv(
+                        params.getInt("defValues"),
+                        params.getInt("dateOfBirth"),
+                        params.getInt("direction"),
+                        params.getInt("mic")
+                )
+        output.put("REUR", doubleArrayToJSONArray(result))
+      }
+      "GetREURindiv9" -> {
+        val result =
+                nal2Manager.getREURindiv9(
+                        params.getInt("defValues"),
+                        params.getInt("dateOfBirth"),
+                        params.getInt("direction"),
+                        params.getInt("mic")
+                )
+        output.put("REUR", doubleArrayToJSONArray(result))
+      }
+      "SetREDDindiv" -> {
+        nal2Manager.setREDDindiv(
+                jsonArrayToDoubleArray(params.getJSONArray("REDD")),
+                params.getInt("defValues")
+        )
+        output.put("success", true)
+      }
+      "SetREDDindiv9" -> {
+        nal2Manager.setREDDindiv9(
+                jsonArrayToDoubleArray(params.getJSONArray("REDD")),
+                params.getInt("defValues")
+        )
+        output.put("success", true)
+      }
+      "SetREURindiv" -> {
+        nal2Manager.setREURindiv(
+                jsonArrayToDoubleArray(params.getJSONArray("REUR")),
+                params.getInt("defValues"),
+                params.getInt("dateOfBirth"),
+                params.getInt("direction"),
+                params.getInt("mic")
+        )
+        output.put("success", true)
+      }
+      "SetREURindiv9" -> {
+        nal2Manager.setREURindiv9(
+                jsonArrayToDoubleArray(params.getJSONArray("REUR")),
+                params.getInt("defValues"),
+                params.getInt("dateOfBirth"),
+                params.getInt("direction"),
+                params.getInt("mic")
+        )
+        output.put("success", true)
+      }
+      "GainAt_NL2" -> {
+        val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
+        val bc = jsonArrayToDoubleArray(params.getJSONArray("BC"))
+        val acOther = jsonArrayToDoubleArray(params.getJSONArray("ACother"))
+
+        val result =
+                nal2Manager.getGainAt(
+                        params.getInt("freqRequired"),
+                        params.getInt("targetType"),
+                        ac,
+                        bc,
+                        params.getDouble("L"),
+                        params.getInt("limiting"),
+                        params.getInt("channels"),
+                        params.getInt("direction"),
+                        params.getInt("mic"),
+                        acOther,
+                        params.getInt("noOfAids"),
+                        params.getInt("bandWidth"),
+                        params.getInt("target"),
+                        params.getInt("aidType"),
+                        params.getInt("tubing"),
+                        params.getInt("vent"),
+                        params.getInt("RECDmeasType")
+                )
+        output.put("Gain", result)
+      }
+      "GetMLE" -> {
+        val result =
+                nal2Manager.getMLE(
+                        params.getInt("aidType"),
+                        params.getInt("direction"),
+                        params.getInt("mic")
+                )
+        output.put("MLE", doubleArrayToJSONArray(result))
+      }
+      "ReturnValues_NL2" -> {
+        val result = nal2Manager.getReturnValues()
+        output.put("MAF", doubleArrayToJSONArray(result.MAF))
+        output.put("BWC", doubleArrayToJSONArray(result.BWC))
+        output.put("ESCD", doubleArrayToJSONArray(result.ESCD))
+      }
+      "GetTubing_NL2" -> {
+        val result = nal2Manager.getTubing(params.getInt("tubing"))
+        output.put("Tubing", doubleArrayToJSONArray(result))
+      }
+      "GetTubing9_NL2" -> {
+        val result = nal2Manager.getTubing9(params.getInt("tubing"))
+        output.put("Tubing", doubleArrayToJSONArray(result))
+      }
+      "GetVentOut_NL2" -> {
+        val result = nal2Manager.getVentOut(params.getInt("vent"))
+        output.put("VentOut", doubleArrayToJSONArray(result))
+      }
+      "GetVentOut9_NL2" -> {
+        val result = nal2Manager.getVentOut9(params.getInt("vent"))
+        output.put("VentOut", doubleArrayToJSONArray(result))
+      }
+      "Get_SI_NL2" -> {
+        val reag = jsonArrayToDoubleArray(params.getJSONArray("REAG"))
+        val limit = jsonArrayToDoubleArray(params.getJSONArray("Limit"))
+        val result = nal2Manager.getSI(params.getInt("s"), reag, limit)
+        output.put("SI", result)
+      }
+      "Get_SII" -> {
+        val speechThresh = jsonArrayToDoubleArray(params.getJSONArray("Speech_thresh"))
+        val reag = jsonArrayToDoubleArray(params.getJSONArray("REAG"))
+        val reagp = jsonArrayToDoubleArray(params.getJSONArray("REAGp"))
+        val reagm = jsonArrayToDoubleArray(params.getJSONArray("REAGm"))
+        val reur = jsonArrayToDoubleArray(params.getJSONArray("REUR"))
+
+        val result =
+                nal2Manager.getSII(
+                        params.getInt("nCompSpeed"),
+                        speechThresh,
+                        params.getInt("s"),
+                        reag,
+                        reagp,
+                        reagm,
+                        reur
+                )
+        output.put("SII", result)
+      }
+      else -> throw Exception("未知函数: $functionName")
+    }
+
+    return output
+  }
+
+  // 辅助方法：JSON数组转Double数组
+  private fun jsonArrayToDoubleArray(jsonArray: JSONArray): DoubleArray {
+    return DoubleArray(jsonArray.length()) { jsonArray.getDouble(it) }
+  }
+
+  // 辅助方法：JSON数组转Int数组
+  private fun jsonArrayToIntArray(jsonArray: JSONArray): IntArray {
+    return IntArray(jsonArray.length()) {
+      // 兼容处理：可能是整数也可能是浮点数
+      try {
+        jsonArray.getInt(it)
+      } catch (e: Exception) {
+        jsonArray.getDouble(it).toInt()
+      }
+    }
+  }
+
+  // 辅助方法：Double数组转JSON数组
+  private fun doubleArrayToJSONArray(array: DoubleArray): JSONArray {
+    val jsonArray = JSONArray()
+    array.forEach { jsonArray.put(it) }
+    return jsonArray
+  }
+
+  // 辅助方法：Int数组转JSON数组
+  private fun intArrayToJSONArray(array: IntArray): JSONArray {
+    val jsonArray = JSONArray()
+    array.forEach { jsonArray.put(it) }
+    return jsonArray
   }
 }

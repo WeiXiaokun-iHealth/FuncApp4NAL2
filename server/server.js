@@ -318,9 +318,9 @@ app.post('/api/test/results', (req, res) => {
   }
 });
 
-// 提供测试页面
-app.get('/test', (req, res) => {
-  res.sendFile(path.join(__dirname, 'test.html'));
+// 根路径重定向到测试页面
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
 // WebSocket连接处理
@@ -402,9 +402,8 @@ wss.on('connection', (ws, req) => {
 initDataFile();
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`NAL2参数服务器运行在: http://localhost:${PORT}`);
-  console.log(`WebSocket服务器运行在: ws://localhost:${PORT}`);
-  console.log(`局域网访问: http://${serverIP}:${PORT}`);
-  console.log(`WebSocket接口: ws://${serverIP}:${PORT}`);
-  console.log(`App API端点: http://${serverIP}:${PORT}/api/current-params`);
+  console.log(`\n🌐 NAL2 测试服务器启动成功`);
+  console.log(`   本地访问: http://localhost:${PORT}`);
+  console.log(`   局域网访问: http://${serverIP}:${PORT}`);
+  console.log(`   API端点: POST http://${serverIP}:${PORT}/api/nal2/process\n`);
 });
