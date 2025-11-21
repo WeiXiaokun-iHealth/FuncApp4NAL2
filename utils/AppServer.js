@@ -22,16 +22,26 @@ class AppServer {
    * @param {number} port - 端口号
    */
   async start(port = 8080) {
-    if (this.isRunning) {
-      console.log('[AppServer] 服务器已在运行');
-      return { success: true, port: this.port };
-    }
-
     this.port = port;
 
     try {
       if (HttpServerModule) {
-        // 使用原生模块启动服务器
+        // 先检查实际状态
+        const status = await HttpServerModule.getServerStatus();
+        
+        // 如果服务器实际已在运行，直接返回成功
+        if (status.isRunning) {
+          this.isRunning = true;
+          console.log('[AppServer] 服务器已在运行，返回当前状态');
+          return {
+            success: true,
+            port: status.port || port,
+            ipAddress: status.ipAddress || 'Unknown'
+          };
+        }
+        
+        // 服务器未运行，尝试启动
+        console.log(`[AppServer] 正在启动服务器，端口 ${port}...`);
         const result = await HttpServerModule.startServer(port);
         
         if (result.success) {
@@ -46,6 +56,24 @@ class AppServer {
         throw new Error('HttpServerModule 未找到，需要原生实现');
       }
     } catch (error) {
+      // 如果是端口占用错误，说明服务器实际已在运行
+      if (error.message && error.message.includes('EADDRINUSE')) {
+        console.log('[AppServer] 端口已被占用，服务器可能已在运行');
+        // 再次检查状态
+        try {
+          const status = await HttpServerModule.getServerStatus();
+          if (status.isRunning) {
+            this.isRunning = true;
+            return {
+              success: true,
+              port: status.port || port,
+              ipAddress: status.ipAddress || 'Unknown'
+            };
+          }
+        } catch (statusError) {
+          console.error('[AppServer] 检查状态失败:', statusError);
+        }
+      }
       console.error('[AppServer] 启动服务器失败:', error);
       throw error;
     }

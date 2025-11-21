@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   StyleSheet, 
   Text, 
@@ -9,7 +9,8 @@ import {
   TouchableOpacity,
   Clipboard,
   NativeModules,
-  NativeEventEmitter
+  NativeEventEmitter,
+  AppState
 } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import AppServer from '../utils/AppServer';
@@ -29,29 +30,27 @@ export default function HttpServerScreen() {
   });
   const [lastRequest, setLastRequest] = useState(null);
   const [lastResponse, setLastResponse] = useState(null);
-  const [requestCount, setRequestCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const appState = useRef(AppState.currentState);
+  const eventEmitterRef = useRef(null);
+  const subscriptionRef = useRef(null);
 
   // 启动HTTP服务器
   useEffect(() => {
     let isMounted = true;
-    let eventEmitter = null;
-    let subscription = null;
-
+    
     const initServer = async () => {
       try {
         console.log('[HttpServer] 正在启动服务器...');
         setLoading(true);
 
-        // 设置事件监听
-        if (HttpServerModule) {
-          eventEmitter = new NativeEventEmitter(HttpServerModule);
-          subscription = eventEmitter.addListener('onHttpRequest', async (data) => {
+        // 设置事件监听（只设置一次）
+        if (HttpServerModule && !eventEmitterRef.current) {
+          eventEmitterRef.current = new NativeEventEmitter(HttpServerModule);
+          subscriptionRef.current = eventEmitterRef.current.addListener('onHttpRequest', async (data) => {
             console.log('[HttpServer] 收到HTTP请求事件:', data);
             if (isMounted) {
-              setRequestCount(prev => prev + 1);
-              
               // 处理请求
               const { requestId, requestBody } = data;
               
@@ -139,29 +138,96 @@ export default function HttpServerScreen() {
 
     initServer();
 
+    // 监听应用前后台切换
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
     return () => {
-      isMounted = false;
       if (subscription) {
         subscription.remove();
+      }
+      if (subscriptionRef.current) {
+        subscriptionRef.current.remove();
       }
       AppServer.stop().catch(err => console.error('停止服务器失败:', err));
     };
   }, []);
 
+  // 处理应用状态变化
+  const handleAppStateChange = async (nextAppState) => {
+    if (
+      appState.current.match(/inactive|background/) &&
+      nextAppState === 'active'
+    ) {
+      console.log('[HttpServer] 应用返回前台，检查服务器状态...');
+      // 应用返回前台，自动检查并恢复服务器
+      await checkAndRestoreServer();
+    }
+    appState.current = nextAppState;
+  };
 
-  // 刷新服务器状态
+  // 检查并恢复服务器
+  const checkAndRestoreServer = async () => {
+    try {
+      console.log('[HttpServer] 检查服务器状态...');
+      
+      // 直接调用start，它会自动检查状态并处理
+      const result = await AppServer.start(DEFAULT_PORT);
+      
+      if (result.success) {
+        console.log('[HttpServer] 服务器状态正常');
+        setServerStatus({
+          isRunning: true,
+          ipAddress: result.ipAddress || '未知',
+          port: result.port || DEFAULT_PORT
+        });
+      }
+    } catch (error) {
+      console.error('[HttpServer] 检查服务器失败:', error);
+      // 获取实际状态
+      try {
+        const status = await AppServer.getStatus();
+        setServerStatus({
+          isRunning: status.isRunning,
+          ipAddress: status.ipAddress || '未知',
+          port: status.port || DEFAULT_PORT
+        });
+      } catch (statusError) {
+        setServerStatus(prev => ({ ...prev, isRunning: false }));
+      }
+    }
+  };
+
+
+  // 刷新服务器状态（如果服务器停止则尝试重启）
   const refreshServerStatus = async () => {
     setRefreshing(true);
     try {
-      const status = await AppServer.getStatus();
-      console.log('[HttpServer] 刷新服务器状态:', status);
-      setServerStatus({
-        isRunning: status.isRunning,
-        ipAddress: status.ipAddress || '未知',
-        port: status.port || DEFAULT_PORT
-      });
+      console.log('[HttpServer] 刷新服务器状态...');
+      
+      // 直接调用start，它会自动检查状态并处理
+      const result = await AppServer.start(DEFAULT_PORT);
+      
+      if (result.success) {
+        console.log('[HttpServer] 服务器状态刷新成功');
+        setServerStatus({
+          isRunning: true,
+          ipAddress: result.ipAddress || '未知',
+          port: result.port || DEFAULT_PORT
+        });
+      }
     } catch (error) {
-      console.error('[HttpServer] 刷新状态失败:', error);
+      console.error('[HttpServer] 刷新失败:', error);
+      // 获取实际状态
+      try {
+        const status = await AppServer.getStatus();
+        setServerStatus({
+          isRunning: status.isRunning,
+          ipAddress: status.ipAddress || '未知',
+          port: status.port || DEFAULT_PORT
+        });
+      } catch (statusError) {
+        setServerStatus(prev => ({ ...prev, isRunning: false }));
+      }
     } finally {
       setRefreshing(false);
     }
@@ -225,10 +291,6 @@ export default function HttpServerScreen() {
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>端口</Text>
                   <Text style={styles.infoValue}>{serverStatus.port}</Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>请求次数</Text>
-                  <Text style={styles.infoValue}>{requestCount}</Text>
                 </View>
               </>
             )}
