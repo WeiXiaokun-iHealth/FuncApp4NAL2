@@ -12,3 +12,17 @@
 -keep class com.facebook.react.turbomodule.** { *; }
 
 # Add any project specific keep options here:
+
+# Keep HttpServerModule and related classes
+-keep class com.funcapp4nal2.HttpServerModule { *; }
+-keep class com.funcapp4nal2.HttpServerPackage { *; }
+-keepclassmembers class com.funcapp4nal2.HttpServerModule {
+    public *;
+}
+
+# Keep NAL2 module
+-keep class com.nal2.** { *; }
+
+# Keep network-related classes for IP detection
+-keep class android.net.wifi.** { *; }
+-keep class java.net.** { *; }

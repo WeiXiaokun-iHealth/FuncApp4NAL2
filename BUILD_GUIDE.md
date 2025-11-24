@@ -46,7 +46,23 @@ yarn android:build:release
 
 输出位置：`android/app/build/outputs/apk/release/app-release.apk`
 
-### 4. 构建 Debug APK
+### 4. 一键构建、安装并打开 Release APK
+
+```bash
+yarn android:build-install:release
+```
+
+这会自动完成：
+
+- 构建 Release APK（包含自动增加 versionCode）
+- 检查设备连接
+- 安装 APK 到连接的设备（覆盖安装）
+- 询问是否启动应用
+- 打开 APK 所在目录（macOS 会在 Finder 中选中文件）
+
+**注意**：如果未检测到设备，会询问是否仅构建 APK 而跳过安装。
+
+### 5. 构建 Debug APK
 
 ```bash
 yarn android:build:debug
@@ -54,7 +70,7 @@ yarn android:build:debug
 
 输出位置：`android/app/build/outputs/apk/debug/app-debug.apk`
 
-### 5. 安装 Release APK
+### 6. 安装 Release APK
 
 ```bash
 yarn android:install:release
@@ -63,14 +79,14 @@ yarn android:install:release
 通过 adb 安装已构建的 release APK 到连接的设备。
 **注意**：需要先运行命令 3 构建 APK
 
-### 6. 安装 Debug APK
+### 7. 安装 Debug APK
 
 ```bash
 yarn android:install:debug
 ```
 
 通过 adb 安装已构建的 debug APK 到连接的设备。
-**注意**：需要先运行命令 4 构建 APK
+**注意**：需要先运行命令 5 构建 APK
 
 ## 清理命令
 
@@ -149,6 +165,16 @@ yarn test:watch
    ```
 
 ### Release 构建流程
+
+#### 方式一：一键完成（推荐）
+
+```bash
+yarn android:build-install:release
+```
+
+这会自动完成构建、安装和打开 APK 目录。
+
+#### 方式二：分步执行
 
 1. 构建 Release APK
 
