@@ -14,7 +14,9 @@ import {
   Alert,
   Platform,
   Share,
-  PermissionsAndroid
+  PermissionsAndroid,
+  Modal,
+  Dimensions
 } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import RNFS from 'react-native-fs';
@@ -24,6 +26,7 @@ import { NAL2Bridge } from '../utils/NAL2Bridge';
 import logger, { LogModule } from '../utils/Logger';
 
 const { HttpServerModule } = NativeModules;
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Import version info from app.json
 const APP_CONFIG = require('../app.json');
@@ -32,6 +35,16 @@ const APP_VERSION = APP_CONFIG.expo.version;
 const BUILD_NUMBER = Platform.OS === 'android' 
   ? Constants.manifest?.android?.versionCode?.toString() || Constants.nativeBuildVersion || '未知'
   : Constants.manifest?.ios?.buildNumber || Constants.nativeBuildVersion || '未知';
+
+// JSON格式化函数
+const formatJSON = (str) => {
+  try {
+    const obj = JSON.parse(str);
+    return JSON.stringify(obj, null, 2);
+  } catch (e) {
+    return str;
+  }
+};
 
 export default function HttpServerScreen() {
   const APP_NAME = 'FuncApp4NAL2';
@@ -49,6 +62,12 @@ export default function HttpServerScreen() {
   const [logs, setLogs] = useState([]);
   const [isLogsExpanded, setIsLogsExpanded] = useState(false);
   const [isDownloadingLogs, setIsDownloadingLogs] = useState(false);
+  const [isRequestExampleExpanded, setIsRequestExampleExpanded] = useState(false);
+  const [isVersionExpanded, setIsVersionExpanded] = useState(true);
+  const [isLastRequestExpanded, setIsLastRequestExpanded] = useState(false);
+  const [isLastResponseExpanded, setIsLastResponseExpanded] = useState(false);
+  const [showFullScreenLogs, setShowFullScreenLogs] = useState(false);
+  
   const appState = useRef(AppState.currentState);
   const eventEmitterRef = useRef(null);
   const subscriptionRef = useRef(null);
@@ -633,66 +652,117 @@ export default function HttpServerScreen() {
                 <Text style={styles.copyButtonText}>📋 复制 API 地址</Text>
               </TouchableOpacity>
 
-              <View style={styles.apiExample}>
-                <Text style={styles.exampleTitle}>请求示例</Text>
-                <View style={styles.codeBlock}>
-                  <Text style={styles.codeText}>{`{
+              {/* 可折叠的请求示例 */}
+              <View style={styles.collapsibleSection}>
+                <TouchableOpacity 
+                  style={styles.collapsibleHeader} 
+                  onPress={() => setIsRequestExampleExpanded(!isRequestExampleExpanded)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.exampleTitle}>请求示例</Text>
+                  <Text style={styles.expandIcon}>
+                    {isRequestExampleExpanded ? '∨' : '»'}
+                  </Text>
+                </TouchableOpacity>
+
+                {isRequestExampleExpanded && (
+                  <View style={styles.codeBlock}>
+                    <Text style={styles.codeText}>{`{
   "sequence_num": 1,
   "function": "dllVersion",
   "input_parameters": {}
 }`}</Text>
-                </View>
+                  </View>
+                )}
               </View>
             </View>
           )}
 
-          {/* 最近请求 */}
+          {/* 最近请求 - 可折叠 */}
           {lastRequest && (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>📥 最近请求</Text>
-              <View style={styles.codeBlock}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <Text style={styles.codeText}>{lastRequest}</Text>
+              <TouchableOpacity 
+                style={styles.collapsibleHeader} 
+                onPress={() => setIsLastRequestExpanded(!isLastRequestExpanded)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cardTitle}>📥 最近请求</Text>
+                <Text style={styles.expandIcon}>
+                  {isLastRequestExpanded ? '∨' : '»'}
+                </Text>
+              </TouchableOpacity>
+              
+              {isLastRequestExpanded && (
+                <ScrollView 
+                  style={styles.largeCodeContainer}
+                  nestedScrollEnabled={true}
+                >
+                  <Text style={styles.codeText}>{formatJSON(lastRequest)}</Text>
                 </ScrollView>
-              </View>
+              )}
             </View>
           )}
 
-          {/* 最近响应 */}
+          {/* 最近响应 - 可折叠 */}
           {lastResponse && (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>📤 最近响应</Text>
-              <View style={styles.codeBlock}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <Text style={styles.codeText}>{lastResponse}</Text>
+              <TouchableOpacity 
+                style={styles.collapsibleHeader} 
+                onPress={() => setIsLastResponseExpanded(!isLastResponseExpanded)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cardTitle}>📤 最近响应</Text>
+                <Text style={styles.expandIcon}>
+                  {isLastResponseExpanded ? '∨' : '»'}
+                </Text>
+              </TouchableOpacity>
+              
+              {isLastResponseExpanded && (
+                <ScrollView 
+                  style={styles.largeCodeContainer}
+                  nestedScrollEnabled={true}
+                >
+                  <Text style={styles.codeText}>{formatJSON(lastResponse)}</Text>
                 </ScrollView>
-              </View>
+              )}
             </View>
           )}
 
-          {/* 版本信息卡片 */}
+          {/* 版本信息卡片 - 可折叠 */}
           <View style={[styles.card, styles.versionCard]}>
-            <Text style={styles.cardTitle}>📱 版本信息</Text>
-            <View style={styles.versionInfo}>
-              <View style={styles.versionRow}>
-                <Text style={styles.versionLabel}>应用名称</Text>
-                <Text style={styles.versionValue}>{APP_NAME}</Text>
+            <TouchableOpacity 
+              style={styles.collapsibleHeader} 
+              onPress={() => setIsVersionExpanded(!isVersionExpanded)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.cardTitle}>📱 版本信息</Text>
+              <Text style={styles.expandIcon}>
+                {isVersionExpanded ? '∨' : '»'}
+              </Text>
+            </TouchableOpacity>
+            
+            {isVersionExpanded && (
+              <View style={styles.versionInfo}>
+                <View style={styles.versionRow}>
+                  <Text style={styles.versionLabel}>应用名称</Text>
+                  <Text style={styles.versionValue}>{APP_NAME}</Text>
+                </View>
+                <View style={styles.versionRow}>
+                  <Text style={styles.versionLabel}>版本号</Text>
+                  <Text style={styles.versionValue}>v{APP_VERSION}</Text>
+                </View>
+                <View style={styles.versionRow}>
+                  <Text style={styles.versionLabel}>构建号</Text>
+                  <Text style={styles.versionValue}>Build {BUILD_NUMBER}</Text>
+                </View>
               </View>
-              <View style={styles.versionRow}>
-                <Text style={styles.versionLabel}>版本号</Text>
-                <Text style={styles.versionValue}>v{APP_VERSION}</Text>
-              </View>
-              <View style={styles.versionRow}>
-                <Text style={styles.versionLabel}>构建号</Text>
-                <Text style={styles.versionValue}>Build {BUILD_NUMBER}</Text>
-              </View>
-            </View>
+            )}
           </View>
 
           {/* 日志查看器 */}
           <View style={styles.card}>
             <TouchableOpacity 
-              style={styles.logHeader} 
+              style={styles.collapsibleHeader} 
               onPress={() => setIsLogsExpanded(!isLogsExpanded)}
               activeOpacity={0.7}
             >
@@ -700,7 +770,7 @@ export default function HttpServerScreen() {
                 📋 应用日志 ({logs.length})
               </Text>
               <Text style={styles.expandIcon}>
-                {isLogsExpanded ? '▼' : '▶'}
+                {isLogsExpanded ? '∨' : '»'}
               </Text>
             </TouchableOpacity>
 
@@ -725,6 +795,13 @@ export default function HttpServerScreen() {
                   >
                     <Text style={styles.logButtonText}>🗑️ 清除日志</Text>
                   </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.logButton, styles.fullScreenButton]} 
+                    onPress={() => setShowFullScreenLogs(true)}
+                    disabled={logs.length === 0}
+                  >
+                    <Text style={styles.logButtonText}>🔍 全屏查看</Text>
+                  </TouchableOpacity>
                 </View>
 
                 <ScrollView 
@@ -734,7 +811,7 @@ export default function HttpServerScreen() {
                   {logs.length === 0 ? (
                     <Text style={styles.noLogsText}>暂无日志</Text>
                   ) : (
-                    logs.map((log, index) => (
+                    logs.slice(0, 50).map((log, index) => (
                       <View key={index} style={styles.logEntry}>
                         <Text style={styles.logTimestamp}>{log.timestamp}</Text>
                         <Text style={[
@@ -748,6 +825,11 @@ export default function HttpServerScreen() {
                       </View>
                     ))
                   )}
+                  {logs.length > 50 && (
+                    <Text style={styles.moreLogsText}>
+                      还有 {logs.length - 50} 条日志，请使用全屏查看
+                    </Text>
+                  )}
                 </ScrollView>
               </>
             )}
@@ -760,6 +842,85 @@ export default function HttpServerScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* 全屏日志查看器 Modal */}
+      <Modal
+        visible={showFullScreenLogs}
+        animationType="slide"
+        onRequestClose={() => setShowFullScreenLogs(false)}
+      >
+        <View style={styles.fullScreenContainer}>
+          <View style={styles.fullScreenHeader}>
+            <Text style={styles.fullScreenTitle}>应用日志 ({logs.length})</Text>
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={() => setShowFullScreenLogs(false)}
+            >
+              <Text style={styles.closeButtonText}>✕ 关闭</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.fullScreenActions}>
+            <TouchableOpacity 
+              style={[styles.logButton, styles.downloadButton]} 
+              onPress={downloadLogs}
+              disabled={isDownloadingLogs || logs.length === 0}
+            >
+              {isDownloadingLogs ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.logButtonText}>💾 下载日志</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.logButton, styles.clearButton]} 
+              onPress={clearLogs}
+              disabled={logs.length === 0}
+            >
+              <Text style={styles.logButtonText}>🗑️ 清除日志</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.fullScreenLogContainer}>
+            {logs.length === 0 ? (
+              <Text style={styles.noLogsText}>暂无日志</Text>
+            ) : (
+              logs.map((log, index) => {
+                // 尝试格式化 JSON 消息
+                let displayMessage = log.message;
+                let isJSON = false;
+                
+                // 检测消息中是否包含 JSON
+                const jsonMatch = log.message.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                  try {
+                    const jsonPart = jsonMatch[0];
+                    const formattedJSON = formatJSON(jsonPart);
+                    displayMessage = log.message.replace(jsonPart, '\n' + formattedJSON);
+                    isJSON = true;
+                  } catch (e) {
+                    // 保持原样
+                  }
+                }
+
+                return (
+                  <View key={index} style={styles.fullScreenLogEntry}>
+                    <Text style={styles.logTimestamp}>{log.timestamp}</Text>
+                    <Text style={[
+                      styles.fullScreenLogMessage,
+                      log.type === 'error' && styles.logError,
+                      log.type === 'success' && styles.logSuccess,
+                      log.type === 'info' && styles.logInfo,
+                    ]}>
+                      {displayMessage}
+                    </Text>
+                  </View>
+                );
+              })
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -870,13 +1031,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 12,
   },
   apiEndpoint: {
     backgroundColor: '#f8f9fa',
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
+    marginTop: 12,
   },
   apiMethod: {
     fontSize: 12,
@@ -903,14 +1064,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  apiExample: {
+  collapsibleSection: {
     marginTop: 8,
+  },
+  collapsibleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    minHeight: 44,
   },
   exampleTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: '#666',
-    marginBottom: 8,
+  },
+  expandIcon: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
   codeBlock: {
     backgroundColor: '#f8f9fa',
@@ -918,12 +1092,22 @@ const styles = StyleSheet.create({
     padding: 12,
     borderWidth: 1,
     borderColor: '#e9ecef',
+    marginTop: 8,
   },
   codeText: {
     fontSize: 11,
     color: '#333',
     fontFamily: 'monospace',
     lineHeight: 16,
+  },
+  largeCodeContainer: {
+    maxHeight: 400,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    marginTop: 12,
   },
   appInfo: {
     marginTop: 20,
@@ -943,6 +1127,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
     borderRadius: 8,
     padding: 12,
+    marginTop: 12,
   },
   versionRow: {
     flexDirection: 'row',
@@ -961,16 +1146,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
-  logHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  expandIcon: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: 'bold',
-  },
   logActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -980,7 +1155,7 @@ const styles = StyleSheet.create({
   logButton: {
     flex: 1,
     paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -992,9 +1167,12 @@ const styles = StyleSheet.create({
   clearButton: {
     backgroundColor: '#FF3B30',
   },
+  fullScreenButton: {
+    backgroundColor: '#007AFF',
+  },
   logButtonText: {
     color: '#fff',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
   },
   logContainer: {
@@ -1010,6 +1188,13 @@ const styles = StyleSheet.create({
     color: '#999',
     fontSize: 14,
     paddingVertical: 20,
+  },
+  moreLogsText: {
+    textAlign: 'center',
+    color: '#666',
+    fontSize: 12,
+    paddingVertical: 10,
+    fontStyle: 'italic',
   },
   logEntry: {
     marginBottom: 8,
@@ -1036,5 +1221,61 @@ const styles = StyleSheet.create({
   },
   logInfo: {
     color: '#007AFF',
+  },
+  // 全屏日志查看器样式
+  fullScreenContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight || 20,
+  },
+  fullScreenHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+    backgroundColor: '#f8f9fa',
+  },
+  fullScreenTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  closeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#007AFF',
+    borderRadius: 6,
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  fullScreenActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  fullScreenLogContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  fullScreenLogEntry: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  fullScreenLogMessage: {
+    fontSize: 13,
+    color: '#333',
+    lineHeight: 20,
+    fontFamily: 'monospace',
   },
 });
