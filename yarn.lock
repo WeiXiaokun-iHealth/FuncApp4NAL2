@@ -5810,10 +5810,9 @@ react-native-fs@^2.20.0:
     base-64 "^0.1.0"
     utf8 "^3.0.0"
 
-"react-native-nal2@file:modules/nal2/react-native-nal2-0.0.0.tgz":
+"react-native-nal2@file:./modules/nal2/react-native-nal2-v0.0.0.tgz":
   version "0.0.0"
-  resolved "file:modules/nal2/react-native-nal2-0.0.0.tgz"
-  integrity sha512-ctChOMMMvTLycBJbvorxoV2Nbc7ZkR3IYA1iU4MXes4ZlkNQfxQ5ao0pUw2ty6Huh4vDFstU9WMLyXJqI4Wa1A==
+  resolved "file:./modules/nal2/react-native-nal2-v0.0.0.tgz#e09987722332d55ff9a8ae096b3a3c7f6409e774"
 
 react-native@0.73.6:
   version "0.73.6"

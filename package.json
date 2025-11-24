@@ -6,7 +6,8 @@
     "start": "expo start",
     "server": "bash scripts/run-server.sh",
     "android": "bash scripts/run-app.sh",
-    "android:fresh": "yarn clean:all && yarn install && bash scripts/run-app.sh",
+    "update:nal2": "bash scripts/update-nal2-module.sh",
+    "android:fresh": "bash scripts/update-nal2-module.sh && yarn clean:all && yarn install && bash scripts/run-app.sh",
     "android:build:debug": "cd android && ./gradlew assembleDebug",
     "android:build:release": "cd android && ./gradlew assembleRelease",
     "android:build-install:release": "bash scripts/android-release-install.sh",
@@ -32,7 +33,7 @@
     "react": "18.2.0",
     "react-native": "0.73.6",
     "react-native-fs": "^2.20.0",
-    "react-native-nal2": "file:modules/nal2/react-native-nal2-0.0.0.tgz",
+    "react-native-nal2": "file:./modules/nal2/react-native-nal2-v0.0.0.tgz",
     "typescript": "^5.3.0"
   },
   "devDependencies": {

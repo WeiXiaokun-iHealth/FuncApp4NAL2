@@ -106,9 +106,15 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       val result =
               nal2Manager.getCrossOverFrequencies(cfArr, channels, acDouble, bcDouble, freqInCh)
 
-      val resultArray = Arguments.createArray()
-      result.forEach { resultArray.pushDouble(it) }
-      promise.resolve(resultArray)
+      val resultMap = Arguments.createMap()
+      val cfArrayResult = Arguments.createArray()
+      result.CFArray.forEach { cfArrayResult.pushDouble(it) }
+      val freqInChResult = Arguments.createArray()
+      result.FreqInCh.forEach { freqInChResult.pushInt(it) }
+
+      resultMap.putArray("CFArray", cfArrayResult)
+      resultMap.putArray("FreqInCh", freqInChResult)
+      promise.resolve(resultMap)
     } catch (e: Exception) {
       Log.e("Nal2Module", "调用CrossOverFrequencies失败", e)
       promise.reject("NAL2_ERROR", "调用CrossOverFrequencies失败: ${e.message}", e)
@@ -1115,9 +1121,9 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       nal2Manager.setGender(gender)
 
       // 获取交叉频率
-      val outputData =
+      val crossOverResult =
               nal2Manager.getCrossOverFrequencies(cfArr, channels, acDouble, bcDouble, freqInCh)
-      nal2Manager.setBWC(channels, outputData)
+      nal2Manager.setBWC(channels, crossOverResult.CFArray)
       nal2Manager.setCompressionThreshold(
               ct,
               bandWidth,
@@ -1130,7 +1136,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       )
 
       val cfArray = Arguments.createArray()
-      outputData.forEach { cfArray.pushDouble(it) }
+      crossOverResult.CFArray.forEach { cfArray.pushDouble(it) }
       writableMap.putArray("cfArray", cfArray)
 
       // 获取MPO (type=1 for SSPL)
@@ -1425,7 +1431,14 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
         val cfArr = DoubleArray(19)
         val freqInCh = IntArray(19)
         val result = nal2Manager.getCrossOverFrequencies(cfArr, channels, ac, bc, freqInCh)
-        output.put("crossOverFreq", doubleArrayToJSONArray(result))
+
+        // 打印 Kotlin 层的 result
+        Log.d(
+                "Nal2Module",
+                "CrossOverFrequencies_NL2 Kotlin result: CFArray size=${result.CFArray.size}, FreqInCh size=${result.FreqInCh.size}"
+        )
+        // 直接复用 result 对象，保证 100% 来自 SDK
+        return crossOverFrequenciesResultToJSON(result)
       }
       "CenterFrequencies" -> {
         val channels = params.getInt("channels")
@@ -1980,5 +1993,15 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
     val jsonArray = JSONArray()
     array.forEach { jsonArray.put(it) }
     return jsonArray
+  }
+
+  // 辅助方法：将 CrossOverFrequenciesResult 转换为 JSONObject
+  private fun crossOverFrequenciesResultToJSON(
+          result: Nal2Manager.CrossOverFrequenciesResult
+  ): JSONObject {
+    val output = JSONObject()
+    output.put("CFArray", doubleArrayToJSONArray(result.CFArray))
+    output.put("FreqInCh", intArrayToJSONArray(result.FreqInCh))
+    return output
   }
 }

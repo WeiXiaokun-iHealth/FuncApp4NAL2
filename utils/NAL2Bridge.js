@@ -107,7 +107,7 @@ class NAL2Bridge {
 
         case 'CrossOverFrequencies_NL2':
           result = await this.handleCrossOverFrequencies(input_parameters);
-          outputParameters = { crossOverFreq: result };
+          outputParameters = { result };
           break;
 
         case 'CenterFrequencies':

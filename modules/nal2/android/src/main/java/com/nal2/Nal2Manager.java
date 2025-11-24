@@ -67,15 +67,50 @@ public class Nal2Manager {
         NativeManager.getInstance(context).SetGender(gender);
     }
 
-    public double[] getCrossOverFrequencies(double[] cfArr, int channels, double[] acDouble, double[] bcDouble,
+    // 内部类用于返回CrossOverFrequencies的结果
+    public static class CrossOverFrequenciesResult {
+        public double[] CFArray;
+        public int[] FreqInCh;
+
+        public CrossOverFrequenciesResult(double[] cfArray, int[] freqInCh) {
+            this.CFArray = cfArray;
+            this.FreqInCh = freqInCh;
+        }
+    }
+
+    public CrossOverFrequenciesResult getCrossOverFrequencies(double[] cfArr, int channels, double[] acDouble,
+            double[] bcDouble,
             int[] freqInCh) {
         try {
             OutputResult result = NativeManager.getInstance(context).CrossOverFrequencies_NL2(cfArr, channels, acDouble,
                     bcDouble, freqInCh);
-            return getOutputData(result, cfArr);
+            double[] cfArray = getOutputData(result, cfArr);
+
+            // 打印 Java 层的 result
+            Log.d(TAG, "CrossOverFrequencies_NL2 result: CFArray length=" + cfArray.length +
+                    ", FreqInCh length=" + freqInCh.length);
+            StringBuilder cfLog = new StringBuilder("CFArray: [");
+            for (int i = 0; i < cfArray.length; i++) {
+                if (i > 0)
+                    cfLog.append(", ");
+                cfLog.append(cfArray[i]);
+            }
+            cfLog.append("]");
+            Log.d(TAG, cfLog.toString());
+
+            StringBuilder freqLog = new StringBuilder("FreqInCh: [");
+            for (int i = 0; i < freqInCh.length; i++) {
+                if (i > 0)
+                    freqLog.append(", ");
+                freqLog.append(freqInCh[i]);
+            }
+            freqLog.append("]");
+            Log.d(TAG, freqLog.toString());
+
+            return new CrossOverFrequenciesResult(cfArray, freqInCh);
         } catch (Exception e) {
             Log.e(TAG, "获取交叉频率失败", e);
-            return cfArr;
+            return new CrossOverFrequenciesResult(cfArr, freqInCh);
         }
     }
 
