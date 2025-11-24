@@ -402,8 +402,5 @@ wss.on('connection', (ws, req) => {
 initDataFile();
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n🌐 NAL2 测试服务器启动成功`);
-  console.log(`   本地访问: http://localhost:${PORT}`);
-  console.log(`   局域网访问: http://${serverIP}:${PORT}`);
-  console.log(`   API端点: POST http://${serverIP}:${PORT}/api/nal2/process\n`);
+  // 服务器已启动，不输出任何信息（由 run-server.sh 脚本输出）
 });
