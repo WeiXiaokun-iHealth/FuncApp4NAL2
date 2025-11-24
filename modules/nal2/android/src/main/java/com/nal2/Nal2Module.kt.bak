@@ -2000,12 +2000,4 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
     output.put("FreqInCh", intArrayToJSONArray(result.FreqInCh))
     return output
   }
-
-  // 辅助方法：合并JSONObject
-  private fun mergeJsonObject(source: JSONObject, target: JSONObject) {
-    val keys = source.keys()
-    while (keys.hasNext()) {
-      val key = keys.next()
-      target.put(key, source.get(key))
-    }
-  }}
+}
