@@ -21,4 +21,10 @@ DerivedData
 *.ipa
 *.xcuserstate
 project.xcworkspace
-Pods/
+.xcode.env.local
+
+# Bundle artifacts
+*.jsbundle
+
+# CocoaPods
+/Pods/

@@ -1,4 +1,4 @@
-rootProject.name = 'FuncApp4NAL2'
+rootProject.name = 'NALNL2APICaller'
 
 dependencyResolutionManagement {
   versionCatalogs {
