@@ -362,6 +362,17 @@ public class HttpServerModule extends ReactContextBaseJavaModule {
 
             try {
                 Log.d(TAG, "收到NAL2请求，请求体长度: " + body.length());
+                
+                // 生成请求ID
+                int requestId = (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
+                
+                // 发送事件到React Native层
+                WritableMap eventData = Arguments.createMap();
+                eventData.putInt("requestId", requestId);
+                eventData.putString("requestBody", body);
+                sendEvent("onHttpRequest", eventData);
+                
+                Log.d(TAG, "已发送onHttpRequest事件到RN层, requestId: " + requestId);
 
                 // 使用Promise同步调用Nal2Module
                 final String[] responseStr = new String[1];

@@ -4,6 +4,8 @@
  */
 
 const { DataParser } = require('./DataParser');
+const logger = require('./Logger').default;
+const { LogLevel, LogModule } = require('./Logger');
 
 // 这里的NAL2函数导入在React Native环境中才有效
 // 测试环境需要mock
@@ -84,9 +86,14 @@ class NAL2Bridge {
   static async processFunction(parsedData) {
     const { sequence_num, function: functionName, input_parameters } = parsedData;
 
+    // 记录请求开始
+    logger.info(LogModule.NAL2, `开始处理NAL2函数: ${functionName}`, { 
+      sequence_num, 
+      functionName,
+      paramCount: Object.keys(input_parameters || {}).length
+    });
+
     try {
-      console.log(`[NAL2Bridge] 处理函数: ${functionName}`);
-      console.log(`[NAL2Bridge] 输入参数:`, input_parameters);
 
       let result;
       let outputParameters = {};
@@ -335,11 +342,24 @@ class NAL2Bridge {
           throw new Error(`未知函数: ${functionName}`);
       }
 
-      console.log(`[NAL2Bridge] 处理成功:`, outputParameters);
+      // 记录处理成功
+      logger.info(LogModule.NAL2, `NAL2函数处理成功: ${functionName}`, {
+        sequence_num,
+        functionName,
+        hasOutput: !!outputParameters
+      });
+      
       return DataParser.createOutput(sequence_num, functionName, 0, outputParameters);
 
     } catch (error) {
-      console.error(`[NAL2Bridge] 处理失败:`, error);
+      // 记录处理失败
+      logger.error(LogModule.NAL2, `NAL2函数处理失败: ${functionName}`, {
+        sequence_num,
+        functionName,
+        error: error.message,
+        stack: error.stack
+      });
+      
       return DataParser.createErrorOutput(sequence_num, functionName, error.message);
     }
   }

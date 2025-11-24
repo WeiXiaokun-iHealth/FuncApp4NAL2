@@ -8,6 +8,7 @@
  */
 
 import { NativeModules } from 'react-native';
+import logger, { LogLevel, LogModule } from './Logger';
 
 const { HttpServerModule } = NativeModules;
 
@@ -32,7 +33,7 @@ class AppServer {
         // 如果服务器实际已在运行，直接返回成功
         if (status.isRunning) {
           this.isRunning = true;
-          console.log('[AppServer] 服务器已在运行，返回当前状态');
+          logger.info(LogModule.SERVER, '服务器已在运行，返回当前状态', { port: status.port, ipAddress: status.ipAddress });
           return {
             success: true,
             port: status.port || port,
@@ -41,13 +42,12 @@ class AppServer {
         }
         
         // 服务器未运行，尝试启动
-        console.log(`[AppServer] 正在启动服务器，端口 ${port}...`);
+        logger.info(LogModule.SERVER, `正在启动服务器，端口 ${port}`);
         const result = await HttpServerModule.startServer(port);
         
         if (result.success) {
           this.isRunning = true;
-          console.log(`[AppServer] 服务器已启动在端口 ${port}`);
-          console.log(`[AppServer] IP地址: ${result.ipAddress}`);
+          logger.info(LogModule.SERVER, `服务器已启动`, { port, ipAddress: result.ipAddress });
           return result;
         } else {
           throw new Error(result.error || '启动服务器失败');
@@ -74,7 +74,7 @@ class AppServer {
           console.error('[AppServer] 检查状态失败:', statusError);
         }
       }
-      console.error('[AppServer] 启动服务器失败:', error);
+      logger.error(LogModule.SERVER, '启动服务器失败', { error: error.message, stack: error.stack });
       throw error;
     }
   }
@@ -91,7 +91,7 @@ class AppServer {
       if (HttpServerModule) {
         await HttpServerModule.stopServer();
         this.isRunning = false;
-        console.log('[AppServer] 服务器已停止');
+        logger.info(LogModule.SERVER, '服务器已停止');
         return { success: true };
       }
     } catch (error) {

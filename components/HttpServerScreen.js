@@ -21,6 +21,7 @@ import RNFS from 'react-native-fs';
 import Constants from 'expo-constants';
 import AppServer from '../utils/AppServer';
 import { NAL2Bridge } from '../utils/NAL2Bridge';
+import logger, { LogModule } from '../utils/Logger';
 
 const { HttpServerModule } = NativeModules;
 
@@ -190,7 +191,8 @@ export default function HttpServerScreen() {
         if (HttpServerModule && !eventEmitterRef.current) {
           eventEmitterRef.current = new NativeEventEmitter(HttpServerModule);
           subscriptionRef.current = eventEmitterRef.current.addListener('onHttpRequest', async (data) => {
-            console.log('[HttpServer] 收到HTTP请求事件:', data);
+            const requestStartTime = Date.now();
+            
             if (isMounted) {
               // 处理请求
               const { requestId, requestBody } = data;
@@ -198,25 +200,53 @@ export default function HttpServerScreen() {
               if (requestBody) {
                 setLastRequest(requestBody);
                 
+                // 1️⃣ HTTP收到的原始数据
+                logger.info(LogModule.NETWORK, '1️⃣ HTTP收到数据', {
+                  requestId,
+                  rawData: requestBody
+                });
+                addLog('info', `1️⃣ HTTP收到: ${requestBody}`);
+                
                 let responseJson;
                 let sendError = false;
                 
                 try {
-                  // 使用NAL2Bridge处理请求
+                  // 解析请求
                   const inputData = JSON.parse(requestBody);
-                  console.log('[HttpServer] 调用NAL2Bridge处理:', inputData);
-                  addLog('info', `收到请求: ${inputData.function || 'Unknown'}`);
                   
+                  // 2️⃣ 解析后发给NAL2前的数据
+                  logger.info(LogModule.NETWORK, '2️⃣ 发送给NAL2', {
+                    requestId,
+                    nal2Input: inputData
+                  });
+                  addLog('info', `2️⃣ NAL2输入: ${JSON.stringify(inputData)}`);
+                  
+                  // 处理
                   const result = await NAL2Bridge.processFunction(inputData);
-                  responseJson = JSON.stringify(result);
                   
-                  console.log('[HttpServer] NAL2处理完成');
-                  addLog('success', `请求处理成功: ${inputData.function || 'Unknown'}`);
+                  // 3️⃣ NAL2处理后的数据
+                  const processingTime = Date.now() - requestStartTime;
+                  logger.info(LogModule.NETWORK, '3️⃣ NAL2返回数据', {
+                    requestId,
+                    processingTime: `${processingTime}ms`,
+                    nal2Output: result
+                  });
+                  addLog('success', `3️⃣ NAL2输出: ${JSON.stringify(result)}`);
+                  
+                  responseJson = JSON.stringify(result);
                   setLastResponse(responseJson);
                   
                 } catch (error) {
-                  console.error('[HttpServer] NAL2处理失败:', error);
-                  addLog('error', `请求处理失败: ${error.message}`);
+                  const processingTime = Date.now() - requestStartTime;
+                  
+                  // 记录处理失败
+                  logger.error(LogModule.NETWORK, '❌ NAL2请求处理失败', {
+                    requestId,
+                    error: error.message,
+                    stack: error.stack,
+                    processingTime: `${processingTime}ms`
+                  });
+                  addLog('error', `❌ 请求处理失败: ${error.message}`);
                   sendError = true;
                   
                   // 生成错误响应
@@ -242,16 +272,14 @@ export default function HttpServerScreen() {
                   }
                 }
                 
-                // 统一发送响应（只调用一次sendResponse）
-                if (requestId !== undefined && HttpServerModule && responseJson) {
-                  try {
-                    await HttpServerModule.sendResponse(requestId, responseJson);
-                    console.log('[HttpServer] 已发送HTTP响应:', sendError ? '错误响应' : '成功响应');
-                  } catch (sendErr) {
-                    console.error('[HttpServer] 发送响应失败:', sendErr.message);
-                    // sendResponse失败不再重试，避免重复
-                  }
-                }
+                // 4️⃣ 返回给调用端的数据（原生层已经处理响应发送）
+                const totalTime = Date.now() - requestStartTime;
+                logger.info(LogModule.NETWORK, '4️⃣ 返回给调用端', {
+                  requestId,
+                  totalTime: `${totalTime}ms`,
+                  responseData: responseJson
+                });
+                addLog('info', `4️⃣ HTTP返回: ${responseJson} (${totalTime}ms)`);
               }
             }
           });
