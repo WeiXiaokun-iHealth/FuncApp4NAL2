@@ -1655,8 +1655,8 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
                         params.getInt("RECDmeasType"),
                         lineType
                 )
-        output.put("TccGain", doubleArrayToJSONArray(result.TccGain))
-        output.put("lineType", intArrayToJSONArray(result.lineType))
+        val resultJson = tccCouplerGainResultToJSON(result)
+        mergeJsonObject(resultJson, output)
       }
       "EarSimulatorGain_NL2" -> {
         val gain = DoubleArray(19)
@@ -1684,8 +1684,8 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
                         params.getInt("RECDmeasType"),
                         lineType
                 )
-        output.put("ESG", doubleArrayToJSONArray(result.ESG))
-        output.put("lineType", intArrayToJSONArray(result.lineType))
+        val resultJson = earSimulatorGainResultToJSON(result)
+        mergeJsonObject(resultJson, output)
       }
       "RealEarInputOutputCurve_NL2" -> {
         val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
@@ -1707,8 +1707,8 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
                         acOther,
                         params.getInt("noOfAids")
                 )
-        output.put("REIO", doubleArrayToJSONArray(result.IO))
-        output.put("REIOunl", doubleArrayToJSONArray(result.IOunl))
+        val resultJson = inputOutputCurveResultToJSON(result)
+        mergeJsonObject(resultJson, output)
       }
       "TccInputOutputCurve_NL2" -> {
         val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
@@ -1734,9 +1734,8 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
                         params.getInt("vent"),
                         params.getInt("RECDmeasType")
                 )
-        output.put("TccIO", doubleArrayToJSONArray(result.TccIO))
-        output.put("TccIOunl", doubleArrayToJSONArray(result.TccIOunl))
-        output.put("lineType", intArrayToJSONArray(result.lineType))
+        val resultJson = tccInputOutputCurveResultToJSON(result)
+        mergeJsonObject(resultJson, output)
       }
       "EarSimulatorInputOutputCurve_NL2" -> {
         val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
@@ -1762,9 +1761,8 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
                         params.getInt("vent"),
                         params.getInt("RECDmeasType")
                 )
-        output.put("ESIO", doubleArrayToJSONArray(result.ESIO))
-        output.put("ESIOunl", doubleArrayToJSONArray(result.ESIOunl))
-        output.put("lineType", intArrayToJSONArray(result.lineType))
+        val resultJson = earSimulatorInputOutputCurveResultToJSON(result)
+        mergeJsonObject(resultJson, output)
       }
       "Speech_o_Gram_NL2" -> {
         val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
@@ -1783,10 +1781,8 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
                         acOther,
                         params.getInt("noOfAids")
                 )
-        output.put("Speech_rms", doubleArrayToJSONArray(result.Speech_rms))
-        output.put("Speech_max", doubleArrayToJSONArray(result.Speech_max))
-        output.put("Speech_min", doubleArrayToJSONArray(result.Speech_min))
-        output.put("Speech_thresh", doubleArrayToJSONArray(result.Speech_thresh))
+        val resultJson = speechOGramResultToJSON(result)
+        mergeJsonObject(resultJson, output)
       }
       "AidedThreshold_NL2" -> {
         val ac = jsonArrayToDoubleArray(params.getJSONArray("AC"))
@@ -1909,9 +1905,8 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       }
       "ReturnValues_NL2" -> {
         val result = nal2Manager.getReturnValues()
-        output.put("MAF", doubleArrayToJSONArray(result.MAF))
-        output.put("BWC", doubleArrayToJSONArray(result.BWC))
-        output.put("ESCD", doubleArrayToJSONArray(result.ESCD))
+        val resultJson = returnValuesResultToJSON(result)
+        mergeJsonObject(resultJson, output)
       }
       "GetTubing_NL2" -> {
         val result = nal2Manager.getTubing(params.getInt("tubing"))
@@ -2001,6 +1996,71 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
     return output
   }
 
+  // 辅助方法：将 TccCouplerGainResult 转换为 JSONObject
+  private fun tccCouplerGainResultToJSON(result: Nal2Manager.TccCouplerGainResult): JSONObject {
+    val output = JSONObject()
+    output.put("TccGain", doubleArrayToJSONArray(result.TccGain))
+    output.put("lineType", intArrayToJSONArray(result.lineType))
+    return output
+  }
+
+  // 辅助方法：将 EarSimulatorGainResult 转换为 JSONObject
+  private fun earSimulatorGainResultToJSON(result: Nal2Manager.EarSimulatorGainResult): JSONObject {
+    val output = JSONObject()
+    output.put("ESG", doubleArrayToJSONArray(result.ESG))
+    output.put("lineType", intArrayToJSONArray(result.lineType))
+    return output
+  }
+
+  // 辅助方法：将 InputOutputCurveResult 转换为 JSONObject
+  private fun inputOutputCurveResultToJSON(result: Nal2Manager.InputOutputCurveResult): JSONObject {
+    val output = JSONObject()
+    output.put("REIO", doubleArrayToJSONArray(result.IO))
+    output.put("REIOunl", doubleArrayToJSONArray(result.IOunl))
+    return output
+  }
+
+  // 辅助方法：将 TccInputOutputCurveResult 转换为 JSONObject
+  private fun tccInputOutputCurveResultToJSON(
+          result: Nal2Manager.TccInputOutputCurveResult
+  ): JSONObject {
+    val output = JSONObject()
+    output.put("TccIO", doubleArrayToJSONArray(result.TccIO))
+    output.put("TccIOunl", doubleArrayToJSONArray(result.TccIOunl))
+    output.put("lineType", intArrayToJSONArray(result.lineType))
+    return output
+  }
+
+  // 辅助方法：将 EarSimulatorInputOutputCurveResult 转换为 JSONObject
+  private fun earSimulatorInputOutputCurveResultToJSON(
+          result: Nal2Manager.EarSimulatorInputOutputCurveResult
+  ): JSONObject {
+    val output = JSONObject()
+    output.put("ESIO", doubleArrayToJSONArray(result.ESIO))
+    output.put("ESIOunl", doubleArrayToJSONArray(result.ESIOunl))
+    output.put("lineType", intArrayToJSONArray(result.lineType))
+    return output
+  }
+
+  // 辅助方法：将 SpeechOGramResult 转换为 JSONObject
+  private fun speechOGramResultToJSON(result: Nal2Manager.SpeechOGramResult): JSONObject {
+    val output = JSONObject()
+    output.put("Speech_rms", doubleArrayToJSONArray(result.Speech_rms))
+    output.put("Speech_max", doubleArrayToJSONArray(result.Speech_max))
+    output.put("Speech_min", doubleArrayToJSONArray(result.Speech_min))
+    output.put("Speech_thresh", doubleArrayToJSONArray(result.Speech_thresh))
+    return output
+  }
+
+  // 辅助方法：将 ReturnValuesResult 转换为 JSONObject
+  private fun returnValuesResultToJSON(result: Nal2Manager.ReturnValuesResult): JSONObject {
+    val output = JSONObject()
+    output.put("MAF", doubleArrayToJSONArray(result.MAF))
+    output.put("BWC", doubleArrayToJSONArray(result.BWC))
+    output.put("ESCD", doubleArrayToJSONArray(result.ESCD))
+    return output
+  }
+
   // 辅助方法：合并JSONObject
   private fun mergeJsonObject(source: JSONObject, target: JSONObject) {
     val keys = source.keys()
@@ -2008,4 +2068,5 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       val key = keys.next()
       target.put(key, source.get(key))
     }
-  }}
+  }
+}
