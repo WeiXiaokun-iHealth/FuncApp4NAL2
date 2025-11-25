@@ -4,7 +4,7 @@
     "slug": "FuncApp4NAL2",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./app_icon.png",
+    "icon": "./app_icon_new.png",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [
       "**/*"
