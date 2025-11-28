@@ -7,6 +7,7 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableArray
+import com.facebook.react.modules.core.DeviceEventManagerModule
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -14,12 +15,69 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
 
   private val nal2Manager = Nal2Manager.getInstance(reactContext)
 
+  init {
+    // 设置日志回调 - 将 Java 层的日志转发到 RN
+    Nal2Manager.setLogCallback { tag, level, message -> sendLogToRN(tag, level, message) }
+
+    // 发送初始化完成日志
+    sendLogToRN("Nal2Module", "INFO", "Nal2Module initialized")
+  }
+
+  /** 发送日志到 RN 层 这是唯一的日志发送方法，所有日志都通过这里发送到 RN */
+  private fun sendLogToRN(tag: String, level: String, message: String) {
+    try {
+      // 1. 先输出到 Android Logcat（方便调试）
+      when (level) {
+        "ERROR" -> Log.e(tag, message)
+        "WARN" -> Log.w(tag, message)
+        "INFO" -> Log.i(tag, message)
+        "DEBUG" -> Log.d(tag, message)
+        else -> Log.v(tag, message)
+      }
+
+      // 2. 检查 React Context 是否可用
+      if (!reactApplicationContext.hasActiveCatalystInstance()) {
+        Log.w("Nal2Module", "React context not ready, skipping log event: $message")
+        return
+      }
+
+      // 3. 发送事件到 RN 层
+      val params =
+              Arguments.createMap().apply {
+                putString("tag", tag)
+                putString("level", level)
+                putString("message", message)
+                putDouble("timestamp", System.currentTimeMillis().toDouble())
+              }
+
+      reactApplicationContext
+              .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+              .emit("Nal2Log", params)
+
+      Log.v("Nal2Module", "✅ Log event sent to RN: $tag - $message")
+    } catch (e: Exception) {
+      // 如果发送失败，至少在 Logcat 中记录
+      Log.e("Nal2Module", "❌ Failed to send log to RN: ${e.message}", e)
+    }
+  }
+
   override fun getName(): String {
     return NAME
   }
 
   companion object {
     const val NAME = "Nal2"
+  }
+
+  // 实现 EventEmitter 所需的方法
+  @ReactMethod
+  fun addListener(eventName: String) {
+    // 保持监听器计数（React Native 需要这个方法）
+  }
+
+  @ReactMethod
+  fun removeListeners(count: Int) {
+    // 保持监听器计数（React Native 需要这个方法）
   }
 
   @ReactMethod
@@ -30,10 +88,10 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       versionMap.putInt("major", version[0])
       versionMap.putInt("minor", version[1])
 
-      Log.d("Nal2Module", "DLL版本: major=${version[0]}, minor=${version[1]}")
+      sendLogToRN("Nal2Module", "DEBUG", "DLL版本: major=${version[0]}, minor=${version[1]}")
       promise.resolve(versionMap)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用dllVersion失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用dllVersion失败: ${e.message}")
       promise.reject("NAL2_ERROR", "调用dllVersion失败: ${e.message}", e)
     }
   }
@@ -87,10 +145,14 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { reigArray.pushDouble(it) }
       writableMap.putArray("REIG", reigArray)
 
-      Log.d("Nal2Module", "RealEarInsertionGain_NL2成功: REIG=${result.joinToString()}")
+      sendLogToRN(
+              "Nal2Module",
+              "DEBUG",
+              "RealEarInsertionGain_NL2成功: REIG=${result.joinToString()}"
+      )
       promise.resolve(writableMap)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用RealEarInsertionGain_NL2失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用RealEarInsertionGain_NL2失败: ${e.message}")
       promise.reject("NAL2_ERROR", "调用RealEarInsertionGain_NL2失败: ${e.message}", e)
     }
   }
@@ -106,17 +168,17 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       val result =
               nal2Manager.getCrossOverFrequencies(cfArr, channels, acDouble, bcDouble, freqInCh)
 
-      val resultMap = Arguments.createMap()
-      val cfArrayResult = Arguments.createArray()
-      result.CFArray.forEach { cfArrayResult.pushDouble(it) }
-      val freqInChResult = Arguments.createArray()
-      result.FreqInCh.forEach { freqInChResult.pushInt(it) }
+      // val resultMap = Arguments.createMap()
+      // val cfArrayResult = Arguments.createArray()
+      // result.CFArray.forEach { cfArrayResult.pushDouble(it) }
+      // val freqInChResult = Arguments.createArray()
+      // result.FreqInCh.forEach { freqInChResult.pushInt(it) }
 
-      resultMap.putArray("CFArray", cfArrayResult)
-      resultMap.putArray("FreqInCh", freqInChResult)
-      promise.resolve(resultMap)
+      // resultMap.putArray("CFArray", cfArrayResult)
+      // resultMap.putArray("FreqInCh", freqInChResult)
+      promise.resolve(result)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用CrossOverFrequencies失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用CrossOverFrequencies失败: ${e.message}")
       promise.reject("NAL2_ERROR", "调用CrossOverFrequencies失败: ${e.message}", e)
     }
   }
@@ -140,7 +202,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       ct.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用CompressionThreshold失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用CompressionThreshold失败: ${e.message}")
       promise.reject("NAL2_ERROR", "调用CompressionThreshold失败: ${e.message}", e)
     }
   }
@@ -158,7 +220,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       nal2Manager.setBWC(channels, crossOverDouble)
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用setBWC失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用setBWC失败: ${e.message}")
       promise.reject("NAL2_ERROR", "调用setBWC失败: ${e.message}", e)
     }
   }
@@ -169,7 +231,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       nal2Manager.setAdultChild(adultChild, dateOfBirth)
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用setAdultChild失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用setAdultChild失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用setAdultChild失败: ${e.message}", e)
     }
   }
@@ -180,7 +242,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       nal2Manager.setExperience(experience)
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用setExperience失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用setExperience失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用setExperience失败: ${e.message}", e)
     }
   }
@@ -191,7 +253,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       nal2Manager.setCompSpeed(compSpeed)
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用setCompSpeed失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用setCompSpeed失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用setCompSpeed失败: ${e.message}", e)
     }
   }
@@ -202,7 +264,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       nal2Manager.setTonalLanguage(tonal)
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用setTonalLanguage失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用setTonalLanguage失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用setTonalLanguage失败: ${e.message}", e)
     }
   }
@@ -213,7 +275,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       nal2Manager.setGender(gender)
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用setGender失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用setGender失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用setGender失败: ${e.message}", e)
     }
   }
@@ -242,7 +304,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getRECDhIndiv失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getRECDhIndiv失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getRECDhIndiv失败: ${e.message}", e)
     }
   }
@@ -271,7 +333,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getRECDhIndiv9失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getRECDhIndiv9失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getRECDhIndiv9失败: ${e.message}", e)
     }
   }
@@ -304,7 +366,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getRECDtIndiv失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getRECDtIndiv失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getRECDtIndiv失败: ${e.message}", e)
     }
   }
@@ -337,7 +399,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getRECDtIndiv9失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getRECDtIndiv9失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getRECDtIndiv9失败: ${e.message}", e)
     }
   }
@@ -349,7 +411,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       nal2Manager.setRECDhIndiv(recdhDouble)
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用setRECDhIndiv失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用setRECDhIndiv失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用setRECDhIndiv失败: ${e.message}", e)
     }
   }
@@ -361,7 +423,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       nal2Manager.setRECDhIndiv9(recdhDouble)
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用setRECDhIndiv9失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用setRECDhIndiv9失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用setRECDhIndiv9失败: ${e.message}", e)
     }
   }
@@ -373,7 +435,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       nal2Manager.setRECDtIndiv(recdtDouble)
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用setRECDtIndiv失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用setRECDtIndiv失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用setRECDtIndiv失败: ${e.message}", e)
     }
   }
@@ -385,25 +447,40 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       nal2Manager.setRECDtIndiv9(recdtDouble)
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用setRECDtIndiv9失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用setRECDtIndiv9失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用setRECDtIndiv9失败: ${e.message}", e)
     }
   }
 
   @ReactMethod
-  fun centerFrequencies(channels: Int, promise: Promise) {
+  fun centerFrequencies(channels: Int, cfArray: ReadableArray, promise: Promise) {
     try {
-      // CFArray是输出参数，SDK内部会填充
-      val cfArrayDouble = DoubleArray(19)
+      // CFArray从JavaScript传入
+      val cfArrayDouble = DoubleArray(cfArray.size()) { cfArray.getDouble(it) }
+
+      // 记录调用前的参数
+      sendLogToRN(
+              "Nal2Module",
+              "INFO",
+              "centerFrequencies 调用前 - channels=$channels, cfArray=[${cfArrayDouble.joinToString(", ") { "%.2f".format(it) }}]"
+      )
+
+      // 调用SDK
       val result = nal2Manager.getCenterFrequencies(channels, cfArrayDouble)
+
+      // 记录调用后的返回值
+      sendLogToRN(
+              "Nal2Module",
+              "INFO",
+              "centerFrequencies 调用后 - result=[${result.joinToString(", ")}]"
+      )
 
       val resultArray = Arguments.createArray()
       result.forEach { resultArray.pushInt(it) }
 
-      Log.d("Nal2Module", "centerFrequencies成功: channels=$channels, result size=${result.size}")
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用centerFrequencies失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用centerFrequencies失败: ${e.message}")
       e.printStackTrace()
       promise.reject("NAL2_ERROR", "调用centerFrequencies失败: ${e.message}", e)
     }
@@ -474,10 +551,10 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       val resultArray = Arguments.createArray()
       result.forEach { resultArray.pushDouble(it) }
 
-      Log.d("Nal2Module", "CompressionRatio_NL2成功: CR=${result.joinToString()}")
+      sendLogToRN("Nal2Module", "DEBUG", "CompressionRatio_NL2成功: CR=${result.joinToString()}")
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用compressionRatio失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用compressionRatio失败" + ": ${e.message}")
       e.printStackTrace()
       promise.reject("NAL2_ERROR", "调用compressionRatio失败: ${e.message}", e)
     }
@@ -498,17 +575,21 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       val acDouble = DoubleArray(ac.size()) { ac.getDouble(it) }
       val bcDouble = DoubleArray(bc.size()) { bc.getDouble(it) }
 
-      Log.d("Nal2Module", "调用getMPO_NL2: type=$type, channels=$channels, limiting=$limiting")
+      sendLogToRN(
+              "Nal2Module",
+              "DEBUG",
+              "调用getMPO_NL2: type=$type, channels=$channels, limiting=$limiting"
+      )
 
       val result = nal2Manager.getMPO(mpoDouble, type, acDouble, bcDouble, channels, limiting)
 
       val resultArray = Arguments.createArray()
       result.forEach { resultArray.pushDouble(it) }
 
-      Log.d("Nal2Module", "getMPO_NL2成功: MPO=${result.joinToString()}")
+      sendLogToRN("Nal2Module", "DEBUG", "getMPO_NL2成功: MPO=${result.joinToString()}")
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getMPO失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getMPO失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getMPO失败: ${e.message}", e)
     }
   }
@@ -548,7 +629,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用realEarAidedGain失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用realEarAidedGain失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用realEarAidedGain失败: ${e.message}", e)
     }
   }
@@ -610,7 +691,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
 
       promise.resolve(writableMap)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用tccCouplerGain失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用tccCouplerGain失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用tccCouplerGain失败: ${e.message}", e)
     }
   }
@@ -672,7 +753,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
 
       promise.resolve(writableMap)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用earSimulatorGain失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用earSimulatorGain失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用earSimulatorGain失败: ${e.message}", e)
     }
   }
@@ -727,7 +808,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
 
       promise.resolve(writableMap)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getRealEarInputOutputCurve失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getRealEarInputOutputCurve失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getRealEarInputOutputCurve失败: ${e.message}", e)
     }
   }
@@ -791,7 +872,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
 
       promise.resolve(writableMap)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getTccInputOutputCurve失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getTccInputOutputCurve失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getTccInputOutputCurve失败: ${e.message}", e)
     }
   }
@@ -855,7 +936,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
 
       promise.resolve(writableMap)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getEarSimulatorInputOutputCurve失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getEarSimulatorInputOutputCurve失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getEarSimulatorInputOutputCurve失败: ${e.message}", e)
     }
   }
@@ -908,7 +989,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
 
       promise.resolve(writableMap)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getSpeechOGram失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getSpeechOGram失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getSpeechOGram失败: ${e.message}", e)
     }
   }
@@ -951,7 +1032,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getAidedThreshold失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getAidedThreshold失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getAidedThreshold失败: ${e.message}", e)
     }
   }
@@ -964,7 +1045,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getREDDindiv失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getREDDindiv失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getREDDindiv失败: ${e.message}", e)
     }
   }
@@ -977,7 +1058,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getREDDindiv9失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getREDDindiv9失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getREDDindiv9失败: ${e.message}", e)
     }
   }
@@ -990,7 +1071,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getREURindiv失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getREURindiv失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getREURindiv失败: ${e.message}", e)
     }
   }
@@ -1003,7 +1084,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getREURindiv9失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getREURindiv9失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getREURindiv9失败: ${e.message}", e)
     }
   }
@@ -1015,7 +1096,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       nal2Manager.setREDDindiv(reddDouble, defValues)
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用setREDDindiv失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用setREDDindiv失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用setREDDindiv失败: ${e.message}", e)
     }
   }
@@ -1027,7 +1108,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       nal2Manager.setREDDindiv9(reddDouble, defValues)
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用setREDDindiv9失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用setREDDindiv9失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用setREDDindiv9失败: ${e.message}", e)
     }
   }
@@ -1046,7 +1127,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       nal2Manager.setREURindiv(reurDouble, defValues, dateOfBirth, direction, mic)
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用setREURindiv失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用setREURindiv失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用setREURindiv失败: ${e.message}", e)
     }
   }
@@ -1065,7 +1146,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       nal2Manager.setREURindiv9(reurDouble, defValues, dateOfBirth, direction, mic)
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用setREURindiv9失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用setREURindiv9失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用setREURindiv9失败: ${e.message}", e)
     }
   }
@@ -1095,7 +1176,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
 
     // 将 ReadableArray 转换为 IntArray 和 DoubleArray
     val acArray = IntArray(ac.size()) { ac.getInt(it) }
-    Log.d("Nal2Module", "ac: ${acArray.joinToString()}")
+    sendLogToRN("Nal2Module", "DEBUG", "ac: ${acArray.joinToString()}")
 
     val writableMap = Arguments.createMap()
 
@@ -1168,7 +1249,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
 
       promise.resolve(writableMap)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "处理NAL2数据时出错", e)
+      sendLogToRN("Nal2Module", "ERROR", "处理NAL2数据时出错" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "处理NAL2数据时出错: ${e.message}", e)
     }
   }
@@ -1224,7 +1305,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
 
       promise.resolve(result)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getGainAt失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getGainAt失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getGainAt失败: ${e.message}", e)
     }
   }
@@ -1237,7 +1318,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getMLE失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getMLE失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getMLE失败: ${e.message}", e)
     }
   }
@@ -1261,7 +1342,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
 
       promise.resolve(writableMap)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getReturnValues失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getReturnValues失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getReturnValues失败: ${e.message}", e)
     }
   }
@@ -1274,7 +1355,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getTubing失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getTubing失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getTubing失败: ${e.message}", e)
     }
   }
@@ -1287,7 +1368,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getTubing9失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getTubing9失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getTubing9失败: ${e.message}", e)
     }
   }
@@ -1300,7 +1381,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getVentOut失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getVentOut失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getVentOut失败: ${e.message}", e)
     }
   }
@@ -1313,7 +1394,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       result.forEach { resultArray.pushDouble(it) }
       promise.resolve(resultArray)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getVentOut9失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getVentOut9失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getVentOut9失败: ${e.message}", e)
     }
   }
@@ -1327,7 +1408,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       val result = nal2Manager.getSI(s, reagDouble, limitDouble)
       promise.resolve(result)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getSI失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getSI失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getSI失败: ${e.message}", e)
     }
   }
@@ -1362,7 +1443,7 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
               )
       promise.resolve(result)
     } catch (e: Exception) {
-      Log.e("Nal2Module", "调用getSII失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "调用getSII失败" + ": ${e.message}")
       promise.reject("NAL2_ERROR", "调用getSII失败: ${e.message}", e)
     }
   }
@@ -1371,14 +1452,14 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
   @ReactMethod
   fun processRequestSync(requestJson: String, promise: Promise) {
     try {
-      Log.d("Nal2Module", "processRequestSync: 收到请求，长度=${requestJson.length}")
+      sendLogToRN("Nal2Module", "DEBUG", "processRequestSync: 收到请求，长度=${requestJson.length}")
 
       val request = JSONObject(requestJson)
       val sequenceNum = request.optInt("sequence_num", 0)
       val functionName = request.getString("function")
       val inputParams = request.getJSONObject("input_parameters")
 
-      Log.d("Nal2Module", "processRequestSync: 函数=$functionName, 序号=$sequenceNum")
+      sendLogToRN("Nal2Module", "DEBUG", "processRequestSync: 函数=$functionName, 序号=$sequenceNum")
 
       // 构建响应
       val response = JSONObject()
@@ -1390,10 +1471,10 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       val outputParams = processFunction(functionName, inputParams)
       response.put("output_parameters", outputParams)
 
-      Log.d("Nal2Module", "processRequestSync: 处理完成")
+      sendLogToRN("Nal2Module", "DEBUG", "processRequestSync: 处理完成")
       promise.resolve(response.toString())
     } catch (e: Exception) {
-      Log.e("Nal2Module", "processRequestSync失败", e)
+      sendLogToRN("Nal2Module", "ERROR", "processRequestSync失败" + ": ${e.message}")
 
       // 返回错误响应
       try {
@@ -1438,9 +1519,16 @@ class Nal2Module(reactContext: ReactApplicationContext) : ReactContextBaseJavaMo
       }
       "CenterFrequencies" -> {
         val channels = params.getInt("channels")
-        val cfArrayDouble = DoubleArray(19)
-        val result = nal2Manager.getCenterFrequencies(channels, cfArrayDouble)
-        output.put("centreFreq", intArrayToJSONArray(result))
+        // 从params中获取CFArray参数
+        val cfArray =
+                if (params.has("CFArray")) {
+                  jsonArrayToDoubleArray(params.getJSONArray("CFArray"))
+                } else {
+                  // 如果没有CFArray参数，创建空数组
+                  DoubleArray(0)
+                }
+        val result = nal2Manager.getCenterFrequencies(channels, cfArray)
+        output.put("centreF", intArrayToJSONArray(result))
       }
       "CompressionThreshold_NL2" -> {
         val ct = DoubleArray(19)

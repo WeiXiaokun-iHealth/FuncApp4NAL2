@@ -24,6 +24,7 @@ import Constants from 'expo-constants';
 import AppServer from '../utils/AppServer';
 import { NAL2Bridge } from '../utils/NAL2Bridge';
 import logger, { LogModule } from '../utils/Logger';
+import { globalVariables } from '../utils/GlobalVariables';
 
 const { HttpServerModule } = NativeModules;
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -68,6 +69,14 @@ export default function HttpServerScreen() {
   const [isLastResponseExpanded, setIsLastResponseExpanded] = useState(false);
   const [showFullScreenLogs, setShowFullScreenLogs] = useState(false);
   
+  // 全局变量状态
+  const [globalVars, setGlobalVars] = useState({
+    CFArray: [],
+    FreqInCh: [],
+    CR: []
+  });
+  const [isGlobalVarsExpanded, setIsGlobalVarsExpanded] = useState(true);
+  
   const appState = useRef(AppState.currentState);
   const eventEmitterRef = useRef(null);
   const subscriptionRef = useRef(null);
@@ -95,6 +104,70 @@ export default function HttpServerScreen() {
 
   // 保持addLog函数的引用
   addLogRef.current = addLog;
+
+  // 监听全局变量变化
+  useEffect(() => {
+    const handleGlobalVarsChange = (vars) => {
+      setGlobalVars(vars);
+    };
+    
+    // 添加监听器
+    globalVariables.addListener(handleGlobalVarsChange);
+    
+    // 初始化时获取当前值
+    setGlobalVars(globalVariables.getAllVariables());
+    
+    // 清理监听器
+    return () => {
+      globalVariables.removeListener(handleGlobalVarsChange);
+    };
+  }, []);
+
+  // 删除单个全局变量
+  const handleDeleteVariable = (varName) => {
+    Alert.alert(
+      '确认删除',
+      `确定要删除 ${varName} 吗？`,
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '删除',
+          style: 'destructive',
+          onPress: () => {
+            switch(varName) {
+              case 'CFArray':
+                globalVariables.deleteCFArray();
+                break;
+              case 'FreqInCh':
+                globalVariables.deleteFreqInCh();
+                break;
+              case 'CR':
+                globalVariables.deleteCR();
+                break;
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  // 清空所有全局变量
+  const handleClearAllVariables = () => {
+    Alert.alert(
+      '确认清空',
+      '确定要清空所有全局变量吗？',
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '清空',
+          style: 'destructive',
+          onPress: () => {
+            globalVariables.clearAll();
+          }
+        }
+      ]
+    );
+  };
 
   // 拦截console输出 - 在组件挂载时立即设置
   useEffect(() => {
@@ -633,6 +706,94 @@ export default function HttpServerScreen() {
                   <Text style={styles.infoValue}>{serverStatus.port}</Text>
                 </View>
               </>
+            )}
+          </View>
+
+          {/* 全局变量管理区域 */}
+          <View style={styles.card}>
+            <TouchableOpacity 
+              style={styles.collapsibleHeader} 
+              onPress={() => setIsGlobalVarsExpanded(!isGlobalVarsExpanded)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.cardTitle}>🔧 全局变量</Text>
+              <View style={styles.headerRight}>
+                {isGlobalVarsExpanded && (
+                  <TouchableOpacity
+                    style={styles.clearAllButtonSmall}
+                    onPress={handleClearAllVariables}
+                  >
+                    <Text style={styles.clearAllButtonSmallText}>清空全部</Text>
+                  </TouchableOpacity>
+                )}
+                <Text style={styles.expandIcon}>
+                  {isGlobalVarsExpanded ? '∨' : '»'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+            
+            {isGlobalVarsExpanded && (
+              <View style={styles.globalVarsContent}>
+                {/* CFArray */}
+                <View style={styles.varItem}>
+                  <View style={styles.varHeader}>
+                    <Text style={styles.varName}>CFArray (交叉频率)</Text>
+                    <TouchableOpacity
+                      style={[styles.deleteButtonSmall, globalVars.CFArray.length === 0 && styles.deleteButtonDisabled]}
+                      onPress={() => handleDeleteVariable('CFArray')}
+                      disabled={globalVars.CFArray.length === 0}
+                    >
+                      <Text style={styles.deleteButtonSmallText}>删除</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.varValue}>
+                    {globalVars.CFArray.length > 0 
+                      ? `[${globalVars.CFArray.map(v => v.toFixed(2)).join(', ')}]`
+                      : '空 []'}
+                  </Text>
+                  <Text style={styles.varInfo}>长度: {globalVars.CFArray.length}</Text>
+                </View>
+
+                {/* FreqInCh */}
+                <View style={styles.varItem}>
+                  <View style={styles.varHeader}>
+                    <Text style={styles.varName}>FreqInCh (频率通道映射)</Text>
+                    <TouchableOpacity
+                      style={[styles.deleteButtonSmall, globalVars.FreqInCh.length === 0 && styles.deleteButtonDisabled]}
+                      onPress={() => handleDeleteVariable('FreqInCh')}
+                      disabled={globalVars.FreqInCh.length === 0}
+                    >
+                      <Text style={styles.deleteButtonSmallText}>删除</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.varValue}>
+                    {globalVars.FreqInCh.length > 0 
+                      ? `[${globalVars.FreqInCh.join(', ')}]`
+                      : '空 []'}
+                  </Text>
+                  <Text style={styles.varInfo}>长度: {globalVars.FreqInCh.length}</Text>
+                </View>
+
+                {/* CR */}
+                <View style={styles.varItem}>
+                  <View style={styles.varHeader}>
+                    <Text style={styles.varName}>CR (压缩比)</Text>
+                    <TouchableOpacity
+                      style={[styles.deleteButtonSmall, globalVars.CR.length === 0 && styles.deleteButtonDisabled]}
+                      onPress={() => handleDeleteVariable('CR')}
+                      disabled={globalVars.CR.length === 0}
+                    >
+                      <Text style={styles.deleteButtonSmallText}>删除</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.varValue}>
+                    {globalVars.CR.length > 0 
+                      ? `[${globalVars.CR.map(v => v.toFixed(2)).join(', ')}]`
+                      : '空 []'}
+                  </Text>
+                  <Text style={styles.varInfo}>长度: {globalVars.CR.length}</Text>
+                </View>
+              </View>
             )}
           </View>
 
@@ -1277,5 +1438,70 @@ const styles = StyleSheet.create({
     color: '#333',
     lineHeight: 20,
     fontFamily: 'monospace',
+  },
+  // 全局变量样式
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  clearAllButtonSmall: {
+    backgroundColor: '#FF3B30',
+    borderRadius: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  clearAllButtonSmallText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  globalVarsContent: {
+    marginTop: 12,
+  },
+  varItem: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 6,
+    padding: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  varHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  varName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#007AFF',
+  },
+  deleteButtonSmall: {
+    backgroundColor: '#FF9500',
+    borderRadius: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  deleteButtonSmallText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  deleteButtonDisabled: {
+    backgroundColor: '#ccc',
+    opacity: 0.5,
+  },
+  varValue: {
+    fontSize: 10,
+    color: '#333',
+    fontFamily: 'monospace',
+    marginBottom: 6,
+    lineHeight: 14,
+  },
+  varInfo: {
+    fontSize: 10,
+    color: '#999',
   },
 });

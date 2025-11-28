@@ -6,6 +6,7 @@
 const { DataParser } = require('./DataParser');
 const logger = require('./Logger').default;
 const { LogLevel, LogModule } = require('./Logger');
+const { globalVariables } = require('./GlobalVariables');
 
 // 这里的NAL2函数导入在React Native环境中才有效
 // 测试环境需要mock
@@ -112,7 +113,7 @@ class NAL2Bridge {
 
         case 'CenterFrequencies':
           result = await this.handleCenterFrequencies(input_parameters);
-          outputParameters = { centreFreq: result };
+          outputParameters = { centreF: result };
           break;
 
         case 'CompressionThreshold_NL2':
@@ -346,7 +347,7 @@ class NAL2Bridge {
       logger.info(LogModule.NAL2, `NAL2函数处理成功: ${functionName}`, {
         sequence_num,
         functionName,
-        hasOutput: !!outputParameters
+        output: outputParameters
       });
       
       return DataParser.createOutput(sequence_num, functionName, 0, outputParameters);
@@ -372,18 +373,51 @@ class NAL2Bridge {
 
   static async handleCrossOverFrequencies(params) {
     DataParser.validateParameters(params, ['channels', 'AC', 'BC']);
-    return await nal2Module.crossOverFrequencies(
+    
+    // 获取全局变量（默认值是空数组[]）
+    const existingCFArray = globalVariables.getCFArray();
+    const existingFreqInCh = globalVariables.getFreqInCh();
+    
+    // 正常调用SDK
+    console.log('[NAL2Bridge] 调用SDK CrossOverFrequencies_NL2');
+    const result = await nal2Module.crossOverFrequencies(
       params.channels,
       params.AC,
       params.BC
     );
+    
+    // 如果全局变量已有值，使用全局变量的值覆盖SDK返回值
+    // if (existingCFArray.length > 0 && existingFreqInCh.length > 0) {
+    //   console.log('[NAL2Bridge] 全局变量已存在，使用全局变量值');
+    //   return {
+    //     CFArray: existingCFArray,
+    //     FreqInCh: existingFreqInCh
+    //   };
+    // }
+    
+    // 全局变量为空，保存SDK返回的新值到全局变量
+    console.log('[NAL2Bridge] 全局变量为空，保存SDK返回值到全局变量');
+    if (result.CFArray) {
+      globalVariables.setCFArray(result.CFArray);
+    }
+    if (result.FreqInCh) {
+      globalVariables.setFreqInCh(result.FreqInCh);
+    }
+    
+    return result;
   }
 
   static async handleCenterFrequencies(params) {
-    // CFArray是SDK内部输出参数，只需要channels作为输入
-    // SDK内部使用CrossOverFrequencies_NL2保存的数据
+    // CFArray从全局变量获取并直接传递给SDK
     DataParser.validateParameters(params, ['channels']);
-    return await nal2Module.centerFrequencies(params.channels);
+    
+    // 优先使用全局变量中的CFArray（默认值是空数组[]）
+    const existingCFArray = globalVariables.getCFArray();
+    
+    console.log('[NAL2Bridge] CenterFrequencies 使用全局变量 CFArray :', existingCFArray);
+    
+    // 调用SDK，传入channels和CFArray
+    return await nal2Module.centerFrequencies(params.channels, existingCFArray);
   }
 
   static async handleCompressionThreshold(params) {
@@ -508,12 +542,28 @@ class NAL2Bridge {
   }
 
   static async handleCompressionRatio(params) {
-    DataParser.validateParameters(params, ['channels', 'centreFreq', 'AC', 'BC', 'direction', 'mic', 'limiting', 'ACother', 'noOfAids']);
-    console.log('[NAL2Bridge] CompressionRatio - centreFreq before call:', params.centreFreq, 'length:', params.centreFreq.length);
+    DataParser.validateParameters(params, ['channels', 'AC', 'BC', 'direction', 'mic', 'limiting', 'ACother', 'noOfAids']);
+    
+    // 获取全局变量CR（默认值是空数组[]）
+    const existingCR = globalVariables.getCR();
+    
+    // 如果全局变量已有值，直接返回全局变量的值，不调用SDK
+    if (existingCR.length > 0) {
+      console.log('[NAL2Bridge] CR全局变量已存在，直接返回全局变量值');
+      return existingCR;
+    }
+    
+    // centreFreq参数不受外部传入影响，使用空数组
+    const centreFreq = [];
+    
+    console.log('[NAL2Bridge] 调用SDK CompressionRatio_NL2');
+    console.log('[NAL2Bridge] CompressionRatio - centreFreq:', centreFreq, 'length:', centreFreq.length);
     console.log('[NAL2Bridge] CompressionRatio - AC:', params.AC, 'length:', params.AC.length);
-    return await nal2Module.compressionRatio(
+    
+    // 调用SDK获取新值
+    const result = await nal2Module.compressionRatio(
       params.channels,
-      params.centreFreq,
+      centreFreq,
       params.AC,
       params.BC,
       params.direction,
@@ -522,6 +572,14 @@ class NAL2Bridge {
       params.ACother,
       params.noOfAids
     );
+    
+    // 保存SDK返回的新值到全局变量
+    console.log('[NAL2Bridge] 保存SDK返回的CR值到全局变量');
+    if (Array.isArray(result) && result.length > 0) {
+      globalVariables.setCR(result);
+    }
+    
+    return result;
   }
 
   static async handleGetMPO(params) {

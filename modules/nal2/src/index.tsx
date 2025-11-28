@@ -37,9 +37,10 @@ export function crossOverFrequencies(
 }
 
 export function centerFrequencies(
-  channels: number
+  channels: number,
+  cfArray: number[]
 ): Promise<number[]> {
-  return Nal2.centerFrequencies(channels);
+  return Nal2.centerFrequencies(channels, Array.from(cfArray));
 }
 
 export function compressionThreshold(

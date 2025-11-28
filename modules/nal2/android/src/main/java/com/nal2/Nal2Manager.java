@@ -13,6 +13,67 @@ public class Nal2Manager {
     private static final String TAG = "Nal2Manager";
     private static Nal2Manager instance;
     private Context context;
+    private static LogCallback logCallback;
+
+    // 日志回调接口
+    public interface LogCallback {
+        void onLog(String tag, String level, String message);
+    }
+
+    // 设置日志回调
+    public static void setLogCallback(LogCallback callback) {
+        logCallback = callback;
+    }
+
+    // 发送日志
+    private static void sendLog(String tag, String level, String message) {
+        if (logCallback != null) {
+            logCallback.onLog(tag, level, message);
+        }
+        // 同时输出到logcat
+        switch (level) {
+            case "DEBUG":
+                Log.d(tag, message);
+                break;
+            case "INFO":
+                Log.i(tag, message);
+                break;
+            case "WARN":
+                Log.w(tag, message);
+                break;
+            case "ERROR":
+                Log.e(tag, message);
+                break;
+            default:
+                Log.v(tag, message);
+                break;
+        }
+    }
+
+    // 发送日志（带异常）
+    private static void sendLog(String tag, String level, String message, Throwable throwable) {
+        if (logCallback != null) {
+            logCallback.onLog(tag, level, message + ": " + throwable.getMessage());
+        }
+        // 同时输出到logcat
+        switch (level) {
+            case "DEBUG":
+                Log.d(tag, message, throwable);
+                break;
+            case "INFO":
+                Log.i(tag, message, throwable);
+                break;
+            case "WARN":
+                Log.w(tag, message, throwable);
+                break;
+            case "ERROR":
+                Log.e(tag, message, throwable);
+                break;
+            default:
+                Log.v(tag, message, throwable);
+                break;
+        }
+    }
 
     private Nal2Manager(Context context) {
         this.context = context.getApplicationContext();
@@ -36,13 +97,13 @@ public class Nal2Manager {
                 method.invoke(NativeManager.getInstance(context), (Object) version);
                 return version;
             } catch (NoSuchMethodException e) {
-                Log.w(TAG, "dllVersion方法不存在，返回默认版本号");
+                sendLog(TAG, "WARN", "dllVersion方法不存在，返回默认版本号");
                 // 如果SDK没有提供dllVersion方法，返回NAL-NL2的标准版本号
                 // 根据NAL-NL2规范，当前版本通常是2.0
                 return new int[] { 2, 0 };
             }
         } catch (Exception e) {
-            Log.e(TAG, "获取DLL版本失败", e);
+            sendLog(TAG, "ERROR", "获取DLL版本失败: " + e.getMessage());
             return new int[] { 2, 0 }; // 默认返回2.0
         }
     }
@@ -84,11 +145,9 @@ public class Nal2Manager {
         try {
             OutputResult result = NativeManager.getInstance(context).CrossOverFrequencies_NL2(cfArr, channels, acDouble,
                     bcDouble, freqInCh);
+
             double[] cfArray = getOutputData(result, cfArr);
 
-            // 打印 Java 层的 result
-            Log.d(TAG, "CrossOverFrequencies_NL2 result: CFArray length=" + cfArray.length +
-                    ", FreqInCh length=" + freqInCh.length);
             StringBuilder cfLog = new StringBuilder("CFArray: [");
             for (int i = 0; i < cfArray.length; i++) {
                 if (i > 0)
@@ -96,7 +155,7 @@ public class Nal2Manager {
                 cfLog.append(cfArray[i]);
             }
             cfLog.append("]");
-            Log.d(TAG, cfLog.toString());
+            sendLog(TAG, "DEBUG", cfLog.toString());
 
             StringBuilder freqLog = new StringBuilder("FreqInCh: [");
             for (int i = 0; i < freqInCh.length; i++) {
@@ -105,11 +164,11 @@ public class Nal2Manager {
                 freqLog.append(freqInCh[i]);
             }
             freqLog.append("]");
-            Log.d(TAG, freqLog.toString());
+            sendLog(TAG, "DEBUG", freqLog.toString());
 
             return new CrossOverFrequenciesResult(cfArray, freqInCh);
         } catch (Exception e) {
-            Log.e(TAG, "获取交叉频率失败", e);
+            sendLog(TAG, "ERROR", "获取交叉频率失败: " + e.getMessage());
             return new CrossOverFrequenciesResult(cfArr, freqInCh);
         }
     }
@@ -126,12 +185,12 @@ public class Nal2Manager {
 
     public double[] getMPO(double[] mpo, int type, double[] acDouble, double[] bcDouble, int channels, int limiting) {
         try {
-            Log.d(TAG, "getMPO_NL2: type=" + type + ", channels=" + channels + ", limiting=" + limiting);
+            sendLog(TAG, "DEBUG", "getMPO_NL2: type=" + type + ", channels=" + channels + ", limiting=" + limiting);
             OutputResult result = NativeManager.getInstance(context).getMPO_NL2(mpo, type, acDouble, bcDouble, channels,
                     limiting);
             return getOutputData(result, mpo);
         } catch (Exception e) {
-            Log.e(TAG, "获取MPO失败", e);
+            sendLog(TAG, "ERROR", "获取MPO失败: " + e.getMessage());
             return mpo;
         }
     }
@@ -143,7 +202,7 @@ public class Nal2Manager {
                     level, limiting, channels, direction, mic, acDouble, noOfAids);
             return getOutputData(result, data);
         } catch (Exception e) {
-            Log.e(TAG, "获取实耳增益失败", e);
+            sendLog(TAG, "ERROR", "获取实耳增益失败: " + e.getMessage());
             return data;
         }
     }
@@ -156,7 +215,7 @@ public class Nal2Manager {
                     channels, direction, mic, acOther, noOfAids);
             return getOutputData(result, reig);
         } catch (Exception e) {
-            Log.e(TAG, "获取实耳插入增益失败", e);
+            sendLog(TAG, "ERROR", "获取实耳插入增益失败: " + e.getMessage());
             return reig;
         }
     }
@@ -170,7 +229,7 @@ public class Nal2Manager {
                     dateOfBirth, aidType, tubing, coupler, fittingDepth, coupler);
             return getOutputData(result, recdh);
         } catch (Exception e) {
-            Log.e(TAG, "获取RECDh_indiv失败", e);
+            sendLog(TAG, "ERROR", "获取RECDh_indiv失败: " + e.getMessage());
             return new double[9];
         }
     }
@@ -184,7 +243,7 @@ public class Nal2Manager {
                     dateOfBirth, aidType, tubing, coupler, fittingDepth, coupler);
             return getOutputData(result, recdh);
         } catch (Exception e) {
-            Log.e(TAG, "获取RECDh_indiv9失败", e);
+            sendLog(TAG, "ERROR", "获取RECDh_indiv9失败: " + e.getMessage());
             return new double[9];
         }
     }
@@ -197,7 +256,7 @@ public class Nal2Manager {
                     dateOfBirth, aidType, tubing, vent, earpiece, coupler, fittingDepth);
             return getOutputData(result, recdt);
         } catch (Exception e) {
-            Log.e(TAG, "获取RECDt_indiv失败", e);
+            sendLog(TAG, "ERROR", "获取RECDt_indiv失败: " + e.getMessage());
             return new double[9];
         }
     }
@@ -210,7 +269,7 @@ public class Nal2Manager {
                     dateOfBirth, aidType, tubing, vent, earpiece, coupler, fittingDepth);
             return getOutputData(result, recdt);
         } catch (Exception e) {
-            Log.e(TAG, "获取RECDt_indiv9失败", e);
+            sendLog(TAG, "ERROR", "获取RECDt_indiv9失败: " + e.getMessage());
             return new double[9];
         }
     }
@@ -254,7 +313,7 @@ public class Nal2Manager {
                     graphFreq, startLevel, finishLevel, limiting, channels, direction, mic, target, acOther, noOfAids);
             return new InputOutputCurveResult(getOutputData(result, reio), reiounl);
         } catch (Exception e) {
-            Log.e(TAG, "获取RealEarInputOutputCurve失败", e);
+            sendLog(TAG, "ERROR", "获取RealEarInputOutputCurve失败: " + e.getMessage());
             return new InputOutputCurveResult(new double[100], new double[100]);
         }
     }
@@ -284,7 +343,7 @@ public class Nal2Manager {
                     noOfAids, tubing, vent, RECDmeasType, lineType);
             return new TccInputOutputCurveResult(getOutputData(result, tccIO), tccIOunl, lineType);
         } catch (Exception e) {
-            Log.e(TAG, "获取TccInputOutputCurve失败", e);
+            sendLog(TAG, "ERROR", "获取TccInputOutputCurve失败: " + e.getMessage());
             return new TccInputOutputCurveResult(new double[100], new double[100], new int[100]);
         }
     }
@@ -314,7 +373,7 @@ public class Nal2Manager {
                     acOther, noOfAids, tubing, vent, RECDmeasType, lineType);
             return new EarSimulatorInputOutputCurveResult(getOutputData(result, esIO), esIOunl, lineType);
         } catch (Exception e) {
-            Log.e(TAG, "获取EarSimulatorInputOutputCurve失败", e);
+            sendLog(TAG, "ERROR", "获取EarSimulatorInputOutputCurve失败: " + e.getMessage());
             return new EarSimulatorInputOutputCurveResult(new double[100], new double[100], new int[100]);
         }
     }
@@ -345,7 +404,7 @@ public class Nal2Manager {
                     speechThresh, ac, bc, L, limiting, channels, direction, mic, acOther, noOfAids);
             return new SpeechOGramResult(getOutputData(result, speechRms), speechMax, speechMin, speechThresh);
         } catch (Exception e) {
-            Log.e(TAG, "获取SpeechOGram失败", e);
+            sendLog(TAG, "ERROR", "获取SpeechOGram失败: " + e.getMessage());
             return new SpeechOGramResult(new double[19], new double[19], new double[19], new double[19]);
         }
     }
@@ -359,7 +418,7 @@ public class Nal2Manager {
                     acOther, noOfAids, limiting, channels, direction, mic);
             return getOutputData(result, at);
         } catch (Exception e) {
-            Log.e(TAG, "获取AidedThreshold失败", e);
+            sendLog(TAG, "ERROR", "获取AidedThreshold失败: " + e.getMessage());
             return new double[19];
         }
     }
@@ -371,7 +430,7 @@ public class Nal2Manager {
             OutputResult result = NativeManager.getInstance(context).GetREDDindiv(redd, defValues);
             return getOutputData(result, redd);
         } catch (Exception e) {
-            Log.e(TAG, "获取REDDindiv失败", e);
+            sendLog(TAG, "ERROR", "获取REDDindiv失败: " + e.getMessage());
             return new double[19];
         }
     }
@@ -383,7 +442,7 @@ public class Nal2Manager {
             OutputResult result = NativeManager.getInstance(context).GetREDDindiv9(redd, defValues);
             return getOutputData(result, redd);
         } catch (Exception e) {
-            Log.e(TAG, "获取REDDindiv9失败", e);
+            sendLog(TAG, "ERROR", "获取REDDindiv9失败: " + e.getMessage());
             return new double[9];
         }
     }
@@ -396,7 +455,7 @@ public class Nal2Manager {
                     direction, mic);
             return getOutputData(result, reur);
         } catch (Exception e) {
-            Log.e(TAG, "获取REURindiv失败", e);
+            sendLog(TAG, "ERROR", "获取REURindiv失败: " + e.getMessage());
             return new double[19];
         }
     }
@@ -409,7 +468,7 @@ public class Nal2Manager {
                     direction, mic);
             return getOutputData(result, reur);
         } catch (Exception e) {
-            Log.e(TAG, "获取REURindiv9失败", e);
+            sendLog(TAG, "ERROR", "获取REURindiv9失败: " + e.getMessage());
             return new double[9];
         }
     }
@@ -439,12 +498,10 @@ public class Nal2Manager {
             int[] centerF = new int[channels];
             // 调用SDK的CenterFrequencies函数
             NativeManager.getInstance(context).CenterFrequencies(centerF, cfArray, channels);
-
-            Log.d(TAG, "CenterFrequencies成功: channels=" + channels +
-                    ", centerF length=" + centerF.length);
             return centerF;
         } catch (Exception e) {
-            Log.e(TAG, "获取中心频率失败", e);
+            String errorMsg = "获取中心频率失败: " + e.getMessage();
+            sendLog(TAG, "ERROR", errorMsg);
             e.printStackTrace();
             return new int[channels];
         }
@@ -455,31 +512,31 @@ public class Nal2Manager {
         try {
             // 详细的参数校验
             if (centreFreq == null || centreFreq.length != channels) {
-                Log.e(TAG, "Invalid centreFreq array: expected " + channels + " elements, got " +
+                sendLog(TAG, "ERROR", "Invalid centreFreq array: expected " + channels + " elements, got " +
                         (centreFreq == null ? "null" : centreFreq.length));
                 throw new IllegalArgumentException("centreFreq array size must equal channels (" + channels + ")");
             }
 
             if (ac == null || ac.length != 9) {
-                Log.e(TAG, "Invalid AC array: expected 9 elements, got " +
+                sendLog(TAG, "ERROR", "Invalid AC array: expected 9 elements, got " +
                         (ac == null ? "null" : ac.length));
                 throw new IllegalArgumentException("AC array must have 9 elements (standard frequencies)");
             }
 
             if (bc == null || bc.length != 9) {
-                Log.e(TAG, "Invalid BC array: expected 9 elements, got " +
+                sendLog(TAG, "ERROR", "Invalid BC array: expected 9 elements, got " +
                         (bc == null ? "null" : bc.length));
                 throw new IllegalArgumentException("BC array must have 9 elements (standard frequencies)");
             }
 
             if (acOther == null || acOther.length != 9) {
-                Log.e(TAG, "Invalid ACother array: expected 9 elements, got " +
+                sendLog(TAG, "ERROR", "Invalid ACother array: expected 9 elements, got " +
                         (acOther == null ? "null" : acOther.length));
                 throw new IllegalArgumentException("ACother array must have 9 elements (standard frequencies)");
             }
 
             // 打印调试信息
-            Log.d(TAG, "CompressionRatio_NL2: channels=" + channels +
+            sendLog(TAG, "DEBUG", "CompressionRatio_NL2: channels=" + channels +
                     ", centreFreq length=" + centreFreq.length +
                     ", AC length=" + ac.length +
                     ", BC length=" + bc.length +
@@ -491,10 +548,10 @@ public class Nal2Manager {
                     ac, bc, direction, mic, limiting, acOther, noOfAids);
             return getOutputData(result, cr);
         } catch (IllegalArgumentException e) {
-            Log.e(TAG, "参数验证失败: " + e.getMessage(), e);
+            sendLog(TAG, "ERROR", "参数验证失败: " + e.getMessage(), e);
             throw e; // 重新抛出，让上层处理
         } catch (Exception e) {
-            Log.e(TAG, "获取压缩比失败", e);
+            sendLog(TAG, "ERROR", "获取压缩比失败: " + e.getMessage());
             e.printStackTrace(); // 打印完整堆栈
             return cr;
         }
@@ -523,7 +580,7 @@ public class Nal2Manager {
             double[] tccGain = getOutputData(result, gain);
             return new TccCouplerGainResult(tccGain, lineType);
         } catch (Exception e) {
-            Log.e(TAG, "获取TCC增益失败", e);
+            sendLog(TAG, "ERROR", "获取TCC增益失败: " + e.getMessage());
             return new TccCouplerGainResult(gain, lineType);
         }
     }
@@ -555,7 +612,7 @@ public class Nal2Manager {
             }
             return new EarSimulatorGainResult(esg, lineType);
         } catch (Exception e) {
-            Log.e(TAG, "获取EarSimulator增益失败", e);
+            sendLog(TAG, "ERROR", "获取EarSimulator增益失败: " + e.getMessage());
             return new EarSimulatorGainResult(gain, lineType);
         }
     }
@@ -568,14 +625,14 @@ public class Nal2Manager {
                 Method method = result.getClass().getMethod("getOutput1");
                 return (double[]) method.invoke(result);
             } catch (Exception e) {
-                Log.e(TAG, "获取output1方法失败，尝试直接访问字段", e);
+                sendLog(TAG, "ERROR", "获取output1方法失败，尝试直接访问字段: " + e.getMessage());
                 // 尝试直接访问output1字段
                 Field field = result.getClass().getDeclaredField("output1");
                 field.setAccessible(true);
                 return (double[]) field.get(result);
             }
         } catch (Exception e) {
-            Log.e(TAG, "获取OutputResult数据失败", e);
+            sendLog(TAG, "ERROR", "获取OutputResult数据失败: " + e.getMessage());
             return defaultValue;
         }
     }
@@ -592,7 +649,7 @@ public class Nal2Manager {
                     L, limiting, channels, direction, mic, acOther, noOfAids, bandWidth, target, aidType, tubing, vent,
                     RECDmeasType);
         } catch (Exception e) {
-            Log.e(TAG, "获取GainAt失败", e);
+            sendLog(TAG, "ERROR", "获取GainAt失败: " + e.getMessage());
             return 0.0;
         }
     }
@@ -604,7 +661,7 @@ public class Nal2Manager {
             OutputResult result = NativeManager.getInstance(context).GetMLE(mle, aidType, direction, mic);
             return getOutputData(result, mle);
         } catch (Exception e) {
-            Log.e(TAG, "获取MLE失败", e);
+            sendLog(TAG, "ERROR", "获取MLE失败: " + e.getMessage());
             return new double[19];
         }
     }
@@ -630,7 +687,7 @@ public class Nal2Manager {
             OutputResult result = NativeManager.getInstance(context).ReturnValues_NL2(maf, bwc, escd);
             return new ReturnValuesResult(getOutputData(result, maf), bwc, escd);
         } catch (Exception e) {
-            Log.e(TAG, "获取ReturnValues失败", e);
+            sendLog(TAG, "ERROR", "获取ReturnValues失败: " + e.getMessage());
             return new ReturnValuesResult(new double[19], new double[19], new double[19]);
         }
     }
@@ -642,7 +699,7 @@ public class Nal2Manager {
             OutputResult result = NativeManager.getInstance(context).GetTubing_NL2(tubingArray, tubing);
             return getOutputData(result, tubingArray);
         } catch (Exception e) {
-            Log.e(TAG, "获取Tubing失败", e);
+            sendLog(TAG, "ERROR", "获取Tubing失败: " + e.getMessage());
             return new double[19];
         }
     }
@@ -654,7 +711,7 @@ public class Nal2Manager {
             OutputResult result = NativeManager.getInstance(context).GetTubing9_NL2(tubingArray, tubing);
             return getOutputData(result, tubingArray);
         } catch (Exception e) {
-            Log.e(TAG, "获取Tubing9失败", e);
+            sendLog(TAG, "ERROR", "获取Tubing9失败: " + e.getMessage());
             return new double[9];
         }
     }
@@ -666,7 +723,7 @@ public class Nal2Manager {
             OutputResult result = NativeManager.getInstance(context).GetVentOut_NL2(ventOut, vent);
             return getOutputData(result, ventOut);
         } catch (Exception e) {
-            Log.e(TAG, "获取VentOut失败", e);
+            sendLog(TAG, "ERROR", "获取VentOut失败: " + e.getMessage());
             return new double[19];
         }
     }
@@ -678,7 +735,7 @@ public class Nal2Manager {
             OutputResult result = NativeManager.getInstance(context).GetVentOut9_NL2(ventOut, vent);
             return getOutputData(result, ventOut);
         } catch (Exception e) {
-            Log.e(TAG, "获取VentOut9失败", e);
+            sendLog(TAG, "ERROR", "获取VentOut9失败: " + e.getMessage());
             return new double[9];
         }
     }
@@ -689,7 +746,7 @@ public class Nal2Manager {
             // Get_SI_NL2直接返回double值，参数顺序: s, REAG, Limit
             return NativeManager.getInstance(context).Get_SI_NL2(s, REAG, Limit);
         } catch (Exception e) {
-            Log.e(TAG, "获取SI失败", e);
+            sendLog(TAG, "ERROR", "获取SI失败: " + e.getMessage());
             return 0.0;
         }
     }
@@ -702,7 +759,7 @@ public class Nal2Manager {
             // REUR
             return NativeManager.getInstance(context).Get_SII(nCompSpeed, Speech_thresh, s, REAG, REAGp, REAGm, REUR);
         } catch (Exception e) {
-            Log.e(TAG, "获取SII失败", e);
+            sendLog(TAG, "ERROR", "获取SII失败: " + e.getMessage());
             return 0.0;
         }
     }

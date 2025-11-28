@@ -64,8 +64,8 @@
       "id": 1763350994497,
       "function": "dllVersion",
       "input": "{\n  \"sequence_num\": 1,\n  \"function\": \"dllVersion\",\n  \"input_parameters\": {}\n}\n",
-      "output": "{\n  \"sequence_num\": 1,\n  \"result\": 0,\n  \"function\": \"dllVersion\",\n  \"return\": 0,\n  \"output_parameters\": {\n    \"major\": 2,\n    \"minor\": 0\n  }\n}",
-      "timestamp": "2025-11-17T05:54:05.148Z"
+      "output": "{\n  \"sequence_num\": 1,\n  \"function\": \"dllVersion\",\n  \"return\": 0,\n  \"output_parameters\": {\n    \"major\": 2,\n    \"minor\": 0\n  }\n}",
+      "timestamp": "2025-11-28T03:18:22.759Z"
     },
     {
       "id": 1763350316133,
@@ -189,16 +189,16 @@
     {
       "id": 1763350108669,
       "function": "CenterFrequencies",
-      "input": "{\n  \"sequence_num\": 20,\n  \"function\": \"CenterFrequencies\",\n  \"input_parameters\": {\n    \"channels\": 18\n  }\n}\n",
-      "output": "{\n  \"sequence_num\": 20,\n  \"result\": -1,\n  \"function\": \"CenterFrequencies\",\n  \"return\": -1,\n  \"output_parameters\": {\n    \"error\": \"缺少必需参数: CFArray\"\n  }\n}",
-      "timestamp": "2025-11-18T08:21:11.049Z"
+      "input": "{\n\"sequence_num\": 20,\n\"function\": \"CenterFrequencies\",\n\"input_parameters\": {\n  \"channels\": 18\n}\n}\n",
+      "output": "{\n  \"sequence_num\": 20,\n  \"function\": \"CenterFrequencies\",\n  \"return\": 0,\n  \"output_parameters\": {\n    \"centreF\": [\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0\n    ]\n  }\n}",
+      "timestamp": "2025-11-28T08:24:24.054Z"
     },
     {
       "id": 1763346828066,
       "function": "CrossOverFrequencies_NL2",
       "input": "{\n  \"sequence_num\": 19,\n  \"function\": \"CrossOverFrequencies_NL2\",\n  \"input_parameters\": {\n    \"channels\": 18,\n    \"AC\": [35.0, 45.0, 40.0, 40.0, 65.0, 70.0, 70.0, 65.0, 55.0],\n    \"BC\": [35.0, 45.0, 40.0, 40.0, 65.0, 70.0, 70.0, 65.0, 55.0]\n  }\n}\n",
       "output": "{\n  \"sequence_num\": 19,\n  \"function\": \"CrossOverFrequencies_NL2\",\n  \"return\": 0,\n  \"output_parameters\": {\n    \"CFArray\": [\n      0,\n      178.06239882323337,\n      224.19681664967337,\n      282.2842606189176,\n      355.4216557752587,\n      447.50831348887715,\n      563.4538227695684,\n      709.4398044105412,\n      893.2494833527821,\n      1124.682650380699,\n      1416.0781367816212,\n      1782.9716576423868,\n      2244.924096618748,\n      2826.5643920798198,\n      3558.902625976133,\n      4480.983322605355,\n      5641.967102699254,\n      7103.75167596759,\n      0\n    ],\n    \"FreqInCh\": [\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0\n    ]\n  }\n}",
-      "timestamp": "2025-11-25T01:56:57.774Z"
+      "timestamp": "2025-11-28T08:24:19.281Z"
     },
     {
       "id": 1763345867104,
