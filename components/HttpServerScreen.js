@@ -73,7 +73,7 @@ export default function HttpServerScreen() {
   const [globalVars, setGlobalVars] = useState({
     CFArray: [],
     FreqInCh: [],
-    CR: []
+    CT: []
   });
   const [isGlobalVarsExpanded, setIsGlobalVarsExpanded] = useState(true);
   
@@ -141,8 +141,8 @@ export default function HttpServerScreen() {
               case 'FreqInCh':
                 globalVariables.deleteFreqInCh();
                 break;
-              case 'CR':
-                globalVariables.deleteCR();
+              case 'CT':
+                globalVariables.deleteCT();
                 break;
             }
           }
@@ -774,24 +774,24 @@ export default function HttpServerScreen() {
                   <Text style={styles.varInfo}>长度: {globalVars.FreqInCh.length}</Text>
                 </View>
 
-                {/* CR */}
+                {/* CT */}
                 <View style={styles.varItem}>
                   <View style={styles.varHeader}>
-                    <Text style={styles.varName}>CR (压缩比)</Text>
+                    <Text style={styles.varName}>CT (压缩阈值)</Text>
                     <TouchableOpacity
-                      style={[styles.deleteButtonSmall, globalVars.CR.length === 0 && styles.deleteButtonDisabled]}
-                      onPress={() => handleDeleteVariable('CR')}
-                      disabled={globalVars.CR.length === 0}
+                      style={[styles.deleteButtonSmall, globalVars.CT.length === 0 && styles.deleteButtonDisabled]}
+                      onPress={() => handleDeleteVariable('CT')}
+                      disabled={globalVars.CT.length === 0}
                     >
                       <Text style={styles.deleteButtonSmallText}>删除</Text>
                     </TouchableOpacity>
                   </View>
                   <Text style={styles.varValue}>
-                    {globalVars.CR.length > 0 
-                      ? `[${globalVars.CR.map(v => v.toFixed(2)).join(', ')}]`
+                    {globalVars.CT.length > 0 
+                      ? `[${globalVars.CT.map(v => v.toFixed(2)).join(', ')}]`
                       : '空 []'}
                   </Text>
-                  <Text style={styles.varInfo}>长度: {globalVars.CR.length}</Text>
+                  <Text style={styles.varInfo}>长度: {globalVars.CT.length}</Text>
                 </View>
               </View>
             )}

@@ -182,9 +182,9 @@
     {
       "id": 1763350114794,
       "function": "CompressionThreshold_NL2",
-      "input": "{\n  \"sequence_num\": 123,\n  \"function\": \"CompressionThreshold_NL2\",\n  \"input_parameters\": {\n    \"WBCT\": 100,\n    \"aidType\": 0,\n    \"direction\": 0,\n    \"mic\": 0,\n    \"calcCh\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\n  }\n}\n",
-      "output": "{\n  \"sequence_num\": 123,\n  \"result\": 0,\n  \"function\": \"CompressionThreshold_NL2\",\n  \"return\": 0,\n  \"output_parameters\": {\n    \"CT\": [\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0\n    ]\n  }\n}",
-      "timestamp": "2025-11-17T03:28:34.794Z"
+      "input": "{\n  \"sequence_num\": 21,\n  \"function\": \"CompressionThreshold_NL2\",\n  \"input_parameters\": {\n    \"WBCT\": 100,\n    \"aidType\": 0,\n    \"direction\": 0,\n    \"mic\": 0,\n    \"calcCh\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\n  }\n}\n",
+      "output": "{\n  \"sequence_num\": 21,\n  \"function\": \"CompressionThreshold_NL2\",\n  \"return\": 0,\n  \"output_parameters\": {\n    \"CT\": [\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0,\n      0\n    ]\n  }\n}",
+      "timestamp": "2025-11-28T08:33:53.877Z"
     },
     {
       "id": 1763350108669,

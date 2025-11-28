@@ -422,13 +422,34 @@ class NAL2Bridge {
 
   static async handleCompressionThreshold(params) {
     DataParser.validateParameters(params, ['WBCT', 'aidType', 'direction', 'mic', 'calcCh']);
-    return await nal2Module.compressionThreshold(
+    
+    // 获取全局变量CT（默认值是空数组[]）
+    const existingCT = globalVariables.getCT();
+    
+    // 如果全局变量已有值，直接返回全局变量的值，不调用SDK
+    if (existingCT.length > 0) {
+      console.log('[NAL2Bridge] CT全局变量已存在，直接返回全局变量值');
+      return existingCT;
+    }
+    
+    console.log('[NAL2Bridge] 调用SDK CompressionThreshold_NL2');
+    
+    // 调用SDK获取新值
+    const result = await nal2Module.compressionThreshold(
       params.WBCT,
       params.aidType,
       params.direction,
       params.mic,
       params.calcCh
     );
+    
+    // 保存SDK返回的新值到全局变量
+    console.log('[NAL2Bridge] 保存SDK返回的CT值到全局变量');
+    if (Array.isArray(result) && result.length > 0) {
+      globalVariables.setCT(result);
+    }
+    
+    return result;
   }
 
   static async handleSetBWC(params) {
@@ -544,15 +565,6 @@ class NAL2Bridge {
   static async handleCompressionRatio(params) {
     DataParser.validateParameters(params, ['channels', 'AC', 'BC', 'direction', 'mic', 'limiting', 'ACother', 'noOfAids']);
     
-    // 获取全局变量CR（默认值是空数组[]）
-    const existingCR = globalVariables.getCR();
-    
-    // 如果全局变量已有值，直接返回全局变量的值，不调用SDK
-    if (existingCR.length > 0) {
-      console.log('[NAL2Bridge] CR全局变量已存在，直接返回全局变量值');
-      return existingCR;
-    }
-    
     // centreFreq参数不受外部传入影响，使用空数组
     const centreFreq = [];
     
@@ -560,7 +572,7 @@ class NAL2Bridge {
     console.log('[NAL2Bridge] CompressionRatio - centreFreq:', centreFreq, 'length:', centreFreq.length);
     console.log('[NAL2Bridge] CompressionRatio - AC:', params.AC, 'length:', params.AC.length);
     
-    // 调用SDK获取新值
+    // 调用SDK获取新值（不再使用全局变量）
     const result = await nal2Module.compressionRatio(
       params.channels,
       centreFreq,
@@ -572,12 +584,6 @@ class NAL2Bridge {
       params.ACother,
       params.noOfAids
     );
-    
-    // 保存SDK返回的新值到全局变量
-    console.log('[NAL2Bridge] 保存SDK返回的CR值到全局变量');
-    if (Array.isArray(result) && result.length > 0) {
-      globalVariables.setCR(result);
-    }
     
     return result;
   }

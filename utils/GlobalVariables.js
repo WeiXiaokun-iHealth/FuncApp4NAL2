@@ -5,7 +5,7 @@
  * 根据SDK文档要求，以下变量一旦生成后不应再修改：
  * - CFArray: CrossOverFrequencies (交叉频率数组)
  * - FreqInCh: 频率所在通道映射数组
- * - CR: CompressionRatio (压缩比数组)
+ * - CT: CompressionThreshold (压缩阈值数组，三分之一倍频程下的压缩阈值)
  */
 
 class GlobalVariablesManager {
@@ -13,7 +13,7 @@ class GlobalVariablesManager {
     // 初始化三个全局变量为空数组
     this.CFArray = [];
     this.FreqInCh = [];
-    this.CR = [];
+    this.CT = [];
     
     // 监听器列表，用于通知UI更新
     this.listeners = [];
@@ -48,17 +48,17 @@ class GlobalVariablesManager {
   }
 
   /**
-   * 设置 CR (压缩比数组)
-   * @param {Array} value - 新的CR值
+   * 设置 CT (压缩阈值数组)
+   * @param {Array} value - 新的CT值
    */
-  setCR(value) {
+  setCT(value) {
     if (!Array.isArray(value)) {
-      console.warn('[GlobalVariables] CR必须是数组类型');
+      console.warn('[GlobalVariables] CT必须是数组类型');
       return;
     }
-    this.CR = [...value];
+    this.CT = [...value];
     this.notifyListeners();
-    console.log('[GlobalVariables] CR已更新:', this.CR);
+    console.log('[GlobalVariables] CT已更新:', this.CT);
   }
 
   /**
@@ -78,11 +78,11 @@ class GlobalVariablesManager {
   }
 
   /**
-   * 获取 CR
-   * @returns {Array} CR的副本
+   * 获取 CT
+   * @returns {Array} CT的副本
    */
-  getCR() {
-    return [...this.CR];
+  getCT() {
+    return [...this.CT];
   }
 
   /**
@@ -104,12 +104,12 @@ class GlobalVariablesManager {
   }
 
   /**
-   * 删除 CR
+   * 删除 CT
    */
-  deleteCR() {
-    this.CR = [];
+  deleteCT() {
+    this.CT = [];
     this.notifyListeners();
-    console.log('[GlobalVariables] CR已删除');
+    console.log('[GlobalVariables] CT已删除');
   }
 
   /**
@@ -120,7 +120,7 @@ class GlobalVariablesManager {
     return {
       CFArray: this.getCFArray(),
       FreqInCh: this.getFreqInCh(),
-      CR: this.getCR()
+      CT: this.getCT()
     };
   }
 
@@ -130,7 +130,7 @@ class GlobalVariablesManager {
   clearAll() {
     this.CFArray = [];
     this.FreqInCh = [];
-    this.CR = [];
+    this.CT = [];
     this.notifyListeners();
     console.log('[GlobalVariables] 所有全局变量已清空');
   }
@@ -181,9 +181,9 @@ class GlobalVariablesManager {
         length: this.FreqInCh.length,
         isEmpty: this.FreqInCh.length === 0
       },
-      CR: {
-        length: this.CR.length,
-        isEmpty: this.CR.length === 0
+      CT: {
+        length: this.CT.length,
+        isEmpty: this.CT.length === 0
       }
     };
   }
